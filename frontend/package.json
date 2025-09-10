@@ -1,0 +1,29 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@pinia/nuxt": "^0.11.2",
+    "@tailwindcss/vite": "^4.1.13",
+    "@vueuse/nuxt": "^13.9.0",
+    "nuxt": "^4.1.1"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^2.6.3",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vue-tsc": "^3.0.6"
+  }
+}
