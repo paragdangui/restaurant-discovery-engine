@@ -135,15 +135,6 @@ const form = ref({
 
 const isEditing = computed(() => !!props.restaurant?.id)
 
-// Watch for restaurant changes
-watch(() => props.restaurant, (newRestaurant) => {
-  if (newRestaurant) {
-    form.value = { ...newRestaurant }
-  } else {
-    resetForm()
-  }
-}, { immediate: true })
-
 const resetForm = () => {
   form.value = {
     name: '',
@@ -154,6 +145,15 @@ const resetForm = () => {
     rating: null
   }
 }
+
+// Watch for restaurant changes
+watch(() => props.restaurant, (newRestaurant) => {
+  if (newRestaurant) {
+    form.value = { ...newRestaurant }
+  } else {
+    resetForm()
+  }
+}, { immediate: true })
 
 const close = () => {
   emit('update:modelValue', false)

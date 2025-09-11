@@ -1,8 +1,9 @@
 - # Project Information:
 
-- The frontend use Nuxt 4 with tailwind v4.1
+- The frontend use Nuxt 4 with @nuxtjs/tailwindcss
 - Backend use NestJs.
 - Both frontend and backend use 2 seperate parent folders.
+- The full project along with all the containers for frontend, backend, etc should run with just the `docker compose up` command.
 
 ## For further Instructions on how the Docker, Backend and Frontend should be created refer the below specifications:
 
