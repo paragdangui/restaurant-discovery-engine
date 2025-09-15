@@ -3,12 +3,12 @@
     <!-- Main Search Input -->
     <div class="relative flex items-center">
       <div class="relative flex-1">
-        <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <MagnifyingGlassIcon class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-400" />
         <input
           v-model="searchQuery"
           type="text"
           placeholder="Search restaurants, cuisines, or dishes..."
-          class="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="w-full rounded-lg border border-surface-300 py-3 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           @keyup.enter="performSearch"
           @input="onSearchInput"
         />
@@ -19,7 +19,7 @@
           @click="toggleVoiceSearch"
           :class="[
             'absolute right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full p-1',
-            isListening ? 'animate-pulse bg-red-500 text-white' : 'text-gray-400 hover:text-primary-500'
+            isListening ? 'animate-pulse bg-red-500 text-white' : 'text-surface-400 hover:text-primary-500'
           ]"
         >
           <MicrophoneIcon class="h-4 w-4" />
@@ -28,12 +28,12 @@
       
       <!-- Location Input -->
       <div class="relative ml-3 flex-shrink-0">
-        <MapPinIcon class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+        <MapPinIcon class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-400" />
         <input
           v-model="location"
           type="text"
           placeholder="Location"
-          class="w-48 rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          class="w-48 rounded-lg border border-surface-300 py-3 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           @keyup.enter="performSearch"
         />
         
@@ -41,7 +41,7 @@
         <button
           @click="getCurrentLocation"
           :disabled="locationLoading"
-          class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-primary-500 disabled:opacity-50"
+          class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-surface-400 hover:text-primary-500 disabled:opacity-50"
         >
           <component :is="locationLoading ? 'div' : 'LocationSearchingIcon'" 
             :class="locationLoading ? 'animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full' : 'h-4 w-4'" 
@@ -54,7 +54,7 @@
         @click="showFilters = !showFilters"
         :class="[
           'ml-3 flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors',
-          showFilters || hasActiveFilters ? 'bg-primary-600 text-white' : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+          showFilters || hasActiveFilters ? 'bg-primary-600 text-white' : 'border border-surface-300 text-surface-700 hover:bg-surface-50'
         ]"
       >
         <FunnelIcon class="mr-2 h-4 w-4" />
@@ -77,18 +77,18 @@
     <!-- Auto-suggestions Dropdown -->
     <div
       v-if="showSuggestions && suggestions.length > 0"
-      class="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+      class="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-surface-200 bg-white shadow-lg"
     >
       <div
         v-for="(suggestion, index) in suggestions"
         :key="index"
         @click="selectSuggestion(suggestion)"
-        class="flex cursor-pointer items-center px-4 py-2 hover:bg-gray-50"
+        class="flex cursor-pointer items-center px-4 py-2 hover:bg-surface-50"
       >
-        <MagnifyingGlassIcon class="mr-3 h-4 w-4 text-gray-400" />
+        <MagnifyingGlassIcon class="mr-3 h-4 w-4 text-surface-400" />
         <div>
-          <div class="text-sm font-medium text-gray-900">{{ suggestion.text }}</div>
-          <div class="text-xs text-gray-500">{{ suggestion.type }}</div>
+          <div class="text-sm font-medium text-surface-900">{{ suggestion.text }}</div>
+          <div class="text-xs text-surface-500">{{ suggestion.type }}</div>
         </div>
       </div>
     </div>
@@ -96,25 +96,25 @@
     <!-- Recent Searches Dropdown -->
     <div
       v-if="showRecent && recentSearches.length > 0"
-      class="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg"
+      class="absolute top-full left-0 right-0 z-50 mt-1 max-h-40 overflow-y-auto rounded-lg border border-surface-200 bg-white shadow-lg"
     >
-      <div class="px-4 py-2 text-xs font-medium text-gray-500 border-b border-gray-100">
+      <div class="px-4 py-2 text-xs font-medium text-surface-500 border-b border-surface-100">
         Recent Searches
       </div>
       <div
         v-for="(recent, index) in recentSearches"
         :key="index"
         @click="selectRecentSearch(recent)"
-        class="flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-gray-50"
+        class="flex cursor-pointer items-center justify-between px-4 py-2 hover:bg-surface-50"
       >
         <div class="flex items-center">
-          <ClockIcon class="mr-3 h-4 w-4 text-gray-400" />
-          <span class="text-sm text-gray-900">{{ recent.query }}</span>
-          <span class="ml-2 text-xs text-gray-500">in {{ recent.location }}</span>
+          <ClockIcon class="mr-3 h-4 w-4 text-surface-400" />
+          <span class="text-sm text-surface-900">{{ recent.query }}</span>
+          <span class="ml-2 text-xs text-surface-500">in {{ recent.location }}</span>
         </div>
         <button
           @click.stop="removeRecentSearch(index)"
-          class="text-gray-400 hover:text-gray-600"
+          class="text-surface-400 hover:text-surface-600"
         >
           <XMarkIcon class="h-4 w-4" />
         </button>
@@ -122,11 +122,11 @@
     </div>
     
     <!-- Advanced Filters Panel -->
-    <div v-if="showFilters" class="absolute top-full left-0 right-0 z-40 mt-1 rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
+    <div v-if="showFilters" class="absolute top-full left-0 right-0 z-40 mt-1 rounded-lg border border-surface-200 bg-white p-6 shadow-lg">
       <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
         <!-- Cuisine Types -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Cuisine Types</label>
+          <label class="block text-sm font-medium text-surface-700 mb-2">Cuisine Types</label>
           <div class="space-y-2 max-h-32 overflow-y-auto">
             <div v-for="cuisine in cuisineTypes" :key="cuisine" class="flex items-center">
               <input
@@ -134,16 +134,16 @@
                 v-model="selectedCuisines"
                 :value="cuisine"
                 type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-surface-300 rounded"
               />
-              <label :for="cuisine" class="ml-2 text-sm text-gray-700">{{ cuisine }}</label>
+              <label :for="cuisine" class="ml-2 text-sm text-surface-700">{{ cuisine }}</label>
             </div>
           </div>
         </div>
         
         <!-- Price Range -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
+          <label class="block text-sm font-medium text-surface-700 mb-2">Price Range</label>
           <div class="space-y-2">
             <div v-for="price in priceRanges" :key="price.value" class="flex items-center">
               <input
@@ -151,30 +151,30 @@
                 v-model="selectedPrices"
                 :value="price.value"
                 type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-surface-300 rounded"
               />
-              <label :for="price.value" class="ml-2 text-sm text-gray-700">{{ price.label }}</label>
+              <label :for="price.value" class="ml-2 text-sm text-surface-700">{{ price.label }}</label>
             </div>
           </div>
         </div>
         
         <!-- Additional Filters -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Options</label>
+          <label class="block text-sm font-medium text-surface-700 mb-2">Options</label>
           <div class="space-y-2">
             <div class="flex items-center">
               <input
                 id="openNow"
                 v-model="openNow"
                 type="checkbox"
-                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-surface-300 rounded"
               />
-              <label for="openNow" class="ml-2 text-sm text-gray-700">Open Now</label>
+              <label for="openNow" class="ml-2 text-sm text-surface-700">Open Now</label>
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Distance</label>
-              <select v-model="distance" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+              <label class="block text-sm font-medium text-surface-700 mb-1">Distance</label>
+              <select v-model="distance" class="w-full rounded border border-surface-300 px-3 py-2 text-sm">
                 <option value="">Any Distance</option>
                 <option value="1000">Within 1 km</option>
                 <option value="5000">Within 5 km</option>
@@ -184,8 +184,8 @@
             </div>
             
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-              <select v-model="minRating" class="w-full rounded border border-gray-300 px-3 py-2 text-sm">
+              <label class="block text-sm font-medium text-surface-700 mb-1">Rating</label>
+              <select v-model="minRating" class="w-full rounded border border-surface-300 px-3 py-2 text-sm">
                 <option value="">Any Rating</option>
                 <option value="3">3+ Stars</option>
                 <option value="4">4+ Stars</option>
@@ -200,14 +200,14 @@
       <div class="mt-4 flex items-center justify-between">
         <button
           @click="clearFilters"
-          class="text-sm text-gray-500 hover:text-gray-700"
+          class="text-sm text-surface-500 hover:text-surface-700"
         >
           Clear All Filters
         </button>
         <div class="flex space-x-2">
           <button
             @click="showFilters = false"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+            class="px-4 py-2 text-sm font-medium text-surface-700 bg-surface-100 rounded hover:bg-surface-200"
           >
             Cancel
           </button>

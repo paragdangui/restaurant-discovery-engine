@@ -18,28 +18,28 @@
           @click.stop
         >
           <!-- Header -->
-          <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
+          <div class="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 z-10">
             <div class="flex items-center justify-between">
               <div class="flex-1 min-w-0">
-                <h2 class="text-xl font-semibold text-gray-900 truncate">
+                <h2 class="text-xl font-semibold text-surface-900 truncate">
                   {{ restaurant?.name }}
                 </h2>
                 <div class="flex items-center mt-1 space-x-4">
                   <div v-if="restaurant?.rating" class="flex items-center">
                     <div class="flex items-center">
-                      <StarIcon class="w-4 h-4 text-yellow-400 fill-current" />
-                      <span class="ml-1 text-sm font-medium text-gray-900">{{ restaurant.rating }}</span>
+                      <StarIcon class="w-4 h-4 text-warning-400 fill-current" />
+                      <span class="ml-1 text-sm font-medium text-surface-900">{{ restaurant.rating }}</span>
                     </div>
-                    <span v-if="restaurant.reviewCount" class="ml-1 text-xs text-gray-500">
+                    <span v-if="restaurant.reviewCount" class="ml-1 text-xs text-surface-500">
                       ({{ restaurant.reviewCount }} reviews)
                     </span>
                   </div>
-                  <span v-if="restaurant?.priceLevel" class="text-sm text-gray-600">
+                  <span v-if="restaurant?.priceLevel" class="text-sm text-surface-600">
                     {{ '$'.repeat(restaurant.priceLevel) }}
                   </span>
                   <span 
                     v-if="restaurant?.categories && restaurant.categories.length > 0" 
-                    class="text-sm text-gray-600"
+                    class="text-sm text-surface-600"
                   >
                     {{ formatCategories(restaurant.categories) }}
                   </span>
@@ -52,7 +52,7 @@
                   @click="toggleFavorite"
                   :class="[
                     'p-2 rounded-full transition-colors',
-                    isFavorite ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:text-red-500'
+                    isFavorite ? 'bg-red-500 text-white' : 'bg-surface-100 text-surface-600 hover:text-red-500'
                   ]"
                 >
                   <HeartIcon :class="['w-5 h-5', isFavorite ? 'fill-current' : '']" />
@@ -60,14 +60,14 @@
                 
                 <button
                   @click="shareRestaurant"
-                  class="p-2 rounded-full bg-gray-100 text-gray-600 hover:text-primary-600 transition-colors"
+                  class="p-2 rounded-full bg-surface-100 text-surface-600 hover:text-primary-600 transition-colors"
                 >
                   <ShareIcon class="w-5 h-5" />
                 </button>
                 
                 <button
                   @click="$emit('close')"
-                  class="p-2 rounded-full bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+                  class="p-2 rounded-full bg-surface-100 text-surface-600 hover:text-surface-900 transition-colors"
                 >
                   <XMarkIcon class="w-5 h-5" />
                 </button>
@@ -114,18 +114,18 @@
                 <div class="flex items-center space-x-3">
                   <span 
                     v-if="restaurant?.isClosed" 
-                    class="px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full"
+                    class="px-3 py-1 bg-error-100 text-error-800 text-sm font-medium rounded-full"
                   >
                     Closed
                   </span>
                   <span 
                     v-else-if="isOpenNow" 
-                    class="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full"
+                    class="px-3 py-1 bg-secondary-100 text-secondary-800 text-sm font-medium rounded-full"
                   >
                     Open Now
                   </span>
                   
-                  <span v-if="distance" class="px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded-full">
+                  <span v-if="distance" class="px-3 py-1 bg-surface-100 text-surface-800 text-sm font-medium rounded-full">
                     {{ distance }}
                   </span>
                 </div>
@@ -134,7 +134,7 @@
                   <button
                     v-if="restaurant?.url"
                     @click="openWebsite"
-                    class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                    class="px-4 py-2 border border-surface-300 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-50 transition-colors"
                   >
                     Open Website
                   </button>
@@ -149,28 +149,28 @@
               
               <!-- Description -->
               <div v-if="restaurant?.description">
-                <h3 class="text-lg font-medium text-gray-900 mb-2">About</h3>
-                <p class="text-gray-600">{{ restaurant.description }}</p>
+                <h3 class="text-lg font-medium text-surface-900 mb-2">About</h3>
+                <p class="text-surface-600">{{ restaurant.description }}</p>
               </div>
               
               <!-- Contact Information -->
               <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Contact & Location</h3>
+                <h3 class="text-lg font-medium text-surface-900 mb-4">Contact & Location</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Address -->
                   <div class="flex items-start space-x-3">
-                    <MapPinIcon class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <MapPinIcon class="w-5 h-5 text-surface-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p class="text-sm font-medium text-gray-900">Address</p>
-                      <p class="text-sm text-gray-600">{{ restaurant?.address }}</p>
+                      <p class="text-sm font-medium text-surface-900">Address</p>
+                      <p class="text-sm text-surface-600">{{ restaurant?.address }}</p>
                     </div>
                   </div>
                   
                   <!-- Phone -->
                   <div v-if="restaurant?.phone" class="flex items-start space-x-3">
-                    <PhoneIcon class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <PhoneIcon class="w-5 h-5 text-surface-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p class="text-sm font-medium text-gray-900">Phone</p>
+                      <p class="text-sm font-medium text-surface-900">Phone</p>
                       <a :href="`tel:${restaurant.phone}`" class="text-sm text-primary-600 hover:text-primary-700">
                         {{ restaurant.phone }}
                       </a>
@@ -179,9 +179,9 @@
                   
                   <!-- Website -->
                   <div v-if="restaurant?.website" class="flex items-start space-x-3">
-                    <GlobeAltIcon class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <GlobeAltIcon class="w-5 h-5 text-surface-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p class="text-sm font-medium text-gray-900">Website</p>
+                      <p class="text-sm font-medium text-surface-900">Website</p>
                       <a 
                         :href="restaurant.website" 
                         target="_blank"
@@ -194,10 +194,10 @@
                   
                   <!-- Hours -->
                   <div v-if="restaurant?.hours && restaurant.hours.length > 0" class="flex items-start space-x-3">
-                    <ClockIcon class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <ClockIcon class="w-5 h-5 text-surface-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p class="text-sm font-medium text-gray-900">Hours</p>
-                      <div class="text-sm text-gray-600">
+                      <p class="text-sm font-medium text-surface-900">Hours</p>
+                      <div class="text-sm text-surface-600">
                         <p v-if="todayHours">
                           Today: {{ formatHours(todayHours) }}
                         </p>
@@ -221,12 +221,12 @@
               
               <!-- Features -->
               <div v-if="restaurant?.transactions && restaurant.transactions.length > 0">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Services</h3>
+                <h3 class="text-lg font-medium text-surface-900 mb-4">Services</h3>
                 <div class="flex flex-wrap gap-2">
                   <span 
                     v-for="transaction in restaurant.transactions" 
                     :key="transaction"
-                    class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                    class="px-3 py-1 bg-info-100 text-info-800 text-sm font-medium rounded-full"
                   >
                     {{ formatTransaction(transaction) }}
                   </span>
@@ -234,26 +234,26 @@
               </div>
               
               <!-- AI Insights -->
-              <div v-if="aiInsights" class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4">
+              <div v-if="aiInsights" class="bg-gradient-to-r from-secondary-50 to-info-50 rounded-lg p-4">
                 <div class="flex items-center space-x-2 mb-3">
-                  <SparklesIcon class="w-5 h-5 text-purple-600" />
-                  <h3 class="text-lg font-medium text-gray-900">AI Insights</h3>
+                  <SparklesIcon class="w-5 h-5 text-primary-600" />
+                  <h3 class="text-lg font-medium text-surface-900">AI Insights</h3>
                 </div>
                 
                 <!-- Review Summary -->
                 <div v-if="aiInsights.reviewSummary" class="mb-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-2">What customers are saying</h4>
-                  <p class="text-sm text-gray-600">{{ aiInsights.reviewSummary }}</p>
+                  <h4 class="text-sm font-medium text-surface-900 mb-2">What customers are saying</h4>
+                  <p class="text-sm text-surface-600">{{ aiInsights.reviewSummary }}</p>
                 </div>
                 
                 <!-- Dietary Compatibility -->
                 <div v-if="aiInsights.dietaryCompatibility" class="mb-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-2">Dietary Options</h4>
+                  <h4 class="text-sm font-medium text-surface-900 mb-2">Dietary Options</h4>
                   <div class="flex flex-wrap gap-2">
                     <span 
                       v-for="diet in aiInsights.dietaryCompatibility" 
                       :key="diet"
-                      class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full"
+                      class="px-2 py-1 bg-secondary-100 text-secondary-800 text-xs font-medium rounded-full"
                     >
                       {{ diet }}
                     </span>
@@ -262,18 +262,18 @@
                 
                 <!-- Best Time to Visit -->
                 <div v-if="aiInsights.bestTime" class="mb-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-2">Best time to visit</h4>
-                  <p class="text-sm text-gray-600">{{ aiInsights.bestTime }}</p>
+                  <h4 class="text-sm font-medium text-surface-900 mb-2">Best time to visit</h4>
+                  <p class="text-sm text-surface-600">{{ aiInsights.bestTime }}</p>
                 </div>
                 
                 <!-- Recommendations -->
                 <div v-if="aiInsights.recommendations && aiInsights.recommendations.length > 0">
-                  <h4 class="text-sm font-medium text-gray-900 mb-2">Recommended dishes</h4>
+                  <h4 class="text-sm font-medium text-surface-900 mb-2">Recommended dishes</h4>
                   <div class="flex flex-wrap gap-2">
                     <span 
                       v-for="dish in aiInsights.recommendations" 
                       :key="dish"
-                      class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full"
+                      class="px-2 py-1 bg-warning-100 text-warning-800 text-xs font-medium rounded-full"
                     >
                       {{ dish }}
                     </span>
@@ -283,12 +283,12 @@
               
               <!-- Recent Reviews -->
               <div v-if="recentReviews && recentReviews.length > 0">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Reviews</h3>
+                <h3 class="text-lg font-medium text-surface-900 mb-4">Recent Reviews</h3>
                 <div class="space-y-4">
                   <div 
                     v-for="review in recentReviews.slice(0, 3)" 
                     :key="review.id"
-                    class="border border-gray-200 rounded-lg p-4"
+                    class="border border-surface-200 rounded-lg p-4"
                   >
                     <div class="flex items-center justify-between mb-2">
                       <div class="flex items-center space-x-2">
@@ -299,7 +299,7 @@
                           class="w-8 h-8 rounded-full"
                         />
                         <div>
-                          <p class="text-sm font-medium text-gray-900">{{ review.user?.name || 'Anonymous' }}</p>
+                          <p class="text-sm font-medium text-surface-900">{{ review.user?.name || 'Anonymous' }}</p>
                           <div class="flex items-center">
                             <div class="flex">
                               <StarIcon 
@@ -307,18 +307,18 @@
                                 :key="i"
                                 :class="[
                                   'w-3 h-3',
-                                  i <= review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                                  i <= review.rating ? 'text-warning-400 fill-current' : 'text-surface-300'
                                 ]" 
                               />
                             </div>
-                            <span class="ml-2 text-xs text-gray-500">
+                            <span class="ml-2 text-xs text-surface-500">
                               {{ formatReviewDate(review.timeCreated) }}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <p class="text-sm text-gray-600">{{ review.text }}</p>
+                    <p class="text-sm text-surface-600">{{ review.text }}</p>
                   </div>
                 </div>
                 

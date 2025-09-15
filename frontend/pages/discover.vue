@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-surface-50">
     <!-- Header with Search -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-30">
+    <div class="bg-white border-b border-surface-200 sticky top-0 z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <RestaurantSearchBar 
           @search="handleSearch"
@@ -14,32 +14,32 @@
     <div :class="['flex', isMapView ? 'h-[calc(100vh-88px)]' : '']">
       <!-- Results Sidebar -->
       <div 
-        class="bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 flex flex-col"
+        class="bg-white border-r border-surface-200 overflow-hidden transition-all duration-300 flex flex-col"
         :class="[
           showResults ? (isMapView ? 'w-96' : 'w-full') : 'w-0',
           !showResults && 'border-r-0'
         ]"
       >
         <!-- Results Header -->
-        <div class="p-4 border-b border-gray-200 bg-gray-50">
+        <div class="p-4 border-b border-surface-200 bg-surface-50">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h2 class="text-lg font-semibold text-gray-900">
+              <h2 class="text-lg font-semibold text-surface-900">
                 {{ searchResults.length }} restaurants found
               </h2>
-              <p v-if="searchQuery" class="text-sm text-gray-600">
+              <p v-if="searchQuery" class="text-sm text-surface-600">
                 for "{{ searchQuery }}" {{ searchLocation ? `in ${searchLocation}` : '' }}
               </p>
             </div>
             
             <!-- View Toggle -->
             <div class="flex items-center space-x-2">
-              <div class="bg-white rounded-lg border border-gray-300 p-1 flex">
+              <div class="bg-white rounded-lg border border-surface-300 p-1 flex">
                 <button
                   @click="toggleView('list')"
                   :class="[
                     'p-2 rounded text-sm font-medium transition-colors',
-                    !isMapView ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                    !isMapView ? 'bg-primary-600 text-white' : 'text-surface-700 hover:bg-surface-100'
                   ]"
                 >
                   <ListBulletIcon class="h-4 w-4" />
@@ -48,7 +48,7 @@
                   @click="toggleView('map')"
                   :class="[
                     'p-2 rounded text-sm font-medium transition-colors',
-                    isMapView ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                    isMapView ? 'bg-primary-600 text-white' : 'text-surface-700 hover:bg-surface-100'
                   ]"
                 >
                   <MapIcon class="h-4 w-4" />
@@ -57,7 +57,7 @@
                   @click="toggleView('split')"
                   :class="[
                     'p-2 rounded text-sm font-medium transition-colors',
-                    isMapView && showResults ? 'bg-primary-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                    isMapView && showResults ? 'bg-primary-600 text-white' : 'text-surface-700 hover:bg-surface-100'
                   ]"
                 >
                   <Squares2X2Icon class="h-4 w-4" />
@@ -73,7 +73,7 @@
               <select 
                 v-model="sortBy" 
                 @change="handleSortChange"
-                class="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                class="appearance-none bg-white border border-surface-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="relevance">Relevance</option>
                 <option value="distance">Distance</option>
@@ -100,27 +100,27 @@
           <div v-if="searchLoading" class="p-4">
             <div class="space-y-4">
               <div v-for="i in 5" :key="i" class="animate-pulse">
-                <div class="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                <div class="h-48 bg-surface-200 rounded-lg mb-4"></div>
               </div>
             </div>
           </div>
           
           <!-- No Results -->
           <div v-else-if="!searchLoading && searchResults.length === 0" class="p-8 text-center">
-            <MagnifyingGlassIcon class="mx-auto h-12 w-12 text-gray-400" />
-            <h3 class="mt-4 text-lg font-medium text-gray-900">No restaurants found</h3>
-            <p class="mt-2 text-gray-500">Try adjusting your search or filters</p>
+            <MagnifyingGlassIcon class="mx-auto h-12 w-12 text-surface-400" />
+            <h3 class="mt-4 text-lg font-medium text-surface-900">No restaurants found</h3>
+            <p class="mt-2 text-surface-500">Try adjusting your search or filters</p>
           </div>
           
           <!-- Results -->
           <div v-else>
             <!-- Narrow sidebar list in map/split views -->
-            <div v-if="isMapView" class="divide-y divide-gray-200">
+            <div v-if="isMapView" class="divide-y divide-surface-200">
               <div
                 v-for="restaurant in paginatedResults"
                 :key="restaurant.id"
-                class="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-                :class="{ 'bg-blue-50 border-l-4 border-blue-500': selectedRestaurantId === restaurant.id }"
+                class="p-4 hover:bg-surface-50 cursor-pointer transition-colors"
+                :class="{ 'bg-primary-50 border-l-4 border-primary-500': selectedRestaurantId === restaurant.id }"
                 @click="selectRestaurant(restaurant)"
               >
                 <RestaurantCard
@@ -159,9 +159,9 @@
           </div>
           
           <!-- Pagination -->
-          <div v-if="totalPages > 1" class="p-4 border-t border-gray-200 bg-gray-50">
+          <div v-if="totalPages > 1" class="p-4 border-t border-surface-200 bg-surface-50">
             <div class="flex items-center justify-between">
-              <div class="text-sm text-gray-700">
+              <div class="text-sm text-surface-700">
                 Showing {{ (currentPage - 1) * pageSize + 1 }} to 
                 {{ Math.min(currentPage * pageSize, totalCount) }} of {{ totalCount }} results
               </div>
@@ -169,17 +169,17 @@
                 <button
                   @click="previousPage"
                   :disabled="currentPage === 1"
-                  class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="px-3 py-2 text-sm font-medium text-surface-700 bg-white border border-surface-300 rounded hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span class="px-3 py-2 text-sm font-medium text-gray-900">
+                <span class="px-3 py-2 text-sm font-medium text-surface-900">
                   {{ currentPage }} of {{ totalPages }}
                 </span>
                 <button
                   @click="nextPage"
                   :disabled="currentPage === totalPages"
-                  class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="px-3 py-2 text-sm font-medium text-surface-700 bg-white border border-surface-300 rounded hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -210,7 +210,7 @@
           <button
             v-if="isMapView && showResults"
             @click="toggleSidebar"
-            class="bg-white rounded-lg shadow-md p-2 text-gray-700 hover:bg-gray-50"
+            class="bg-white rounded-lg shadow-md p-2 text-surface-700 hover:bg-surface-50"
           >
             <Bars3Icon v-if="showResults" class="h-5 w-5" />
             <XMarkIcon v-else class="h-5 w-5" />
@@ -222,17 +222,17 @@
     <!-- AI Recommendations Panel -->
     <div 
       v-if="showRecommendations && recommendations.length > 0" 
-      class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 max-h-64 overflow-hidden"
+      class="fixed bottom-0 left-0 right-0 bg-white border-t border-surface-200 shadow-lg z-40 max-h-64 overflow-hidden"
     >
       <div class="p-4">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center space-x-2">
             <SparklesIcon class="h-5 w-5 text-primary-600" />
-            <h3 class="font-medium text-gray-900">AI Recommendations</h3>
+            <h3 class="font-medium text-surface-900">AI Recommendations</h3>
           </div>
           <button
             @click="showRecommendations = false"
-            class="text-gray-400 hover:text-gray-600"
+            class="text-surface-400 hover:text-surface-600"
           >
             <XMarkIcon class="h-5 w-5" />
           </button>
@@ -242,7 +242,7 @@
           <div 
             v-for="recommendation in recommendations.slice(0, 5)" 
             :key="recommendation.id"
-            class="flex-shrink-0 w-64 bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100"
+            class="flex-shrink-0 w-64 bg-surface-50 rounded-lg p-3 cursor-pointer hover:bg-surface-100"
             @click="selectRestaurant(recommendation.restaurant)"
           >
             <div class="flex items-start space-x-3">
@@ -253,15 +253,15 @@
                 class="w-12 h-12 rounded-lg object-cover"
               />
               <div class="flex-1 min-w-0">
-                <h4 class="text-sm font-medium text-gray-900 truncate">
+                <h4 class="text-sm font-medium text-surface-900 truncate">
                   {{ recommendation.restaurant.name }}
                 </h4>
-                <p class="text-xs text-gray-600 mt-1">
+                <p class="text-xs text-surface-600 mt-1">
                   {{ recommendation.reason }}
                 </p>
                 <div class="flex items-center mt-1">
-                  <StarIcon class="w-3 h-3 text-yellow-400 fill-current" />
-                  <span class="ml-1 text-xs text-gray-600">
+                  <StarIcon class="w-3 h-3 text-warning-400 fill-current" />
+                  <span class="ml-1 text-xs text-surface-600">
                     {{ recommendation.restaurant.rating }}
                   </span>
                 </div>

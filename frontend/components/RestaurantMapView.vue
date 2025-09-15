@@ -55,18 +55,18 @@
                   class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                 />
                 <div class="flex-1 min-w-0">
-                  <h3 class="font-semibold text-gray-900 text-sm truncate">
+                  <h3 class="font-semibold text-surface-900 text-sm truncate">
                     {{ selectedRestaurant.name }}
                   </h3>
                   <div class="flex items-center mt-1">
                     <div class="flex items-center">
-                      <StarIcon class="w-4 h-4 text-yellow-400 fill-current" />
-                      <span class="ml-1 text-sm text-gray-600">{{ selectedRestaurant.rating }}</span>
+                      <StarIcon class="w-4 h-4 text-warning-400 fill-current" />
+                      <span class="ml-1 text-sm text-surface-600">{{ selectedRestaurant.rating }}</span>
                     </div>
-                    <span class="mx-2 text-gray-300">•</span>
-                    <span class="text-sm text-gray-600">{{ formatPrice(selectedRestaurant.priceLevel) }}</span>
+                    <span class="mx-2 text-surface-300">•</span>
+                    <span class="text-sm text-surface-600">{{ formatPrice(selectedRestaurant.priceLevel) }}</span>
                   </div>
-                  <p class="text-xs text-gray-500 mt-1 truncate">
+                  <p class="text-xs text-surface-500 mt-1 truncate">
                     {{ selectedRestaurant.address }}
                   </p>
                 </div>
@@ -80,7 +80,7 @@
                 </button>
                 <button
                   @click="getDirections(selectedRestaurant)"
-                  class="px-3 py-2 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
+                  class="px-3 py-2 border border-surface-300 text-surface-700 text-xs font-medium rounded hover:bg-surface-50"
                 >
                   Directions
                 </button>
@@ -97,13 +97,13 @@
       <div class="bg-white rounded-lg shadow-md">
         <button
           @click="zoomIn"
-          class="block w-full px-3 py-2 text-gray-700 hover:bg-gray-50 text-lg font-bold border-b border-gray-200"
+          class="block w-full px-3 py-2 text-surface-700 hover:bg-surface-50 text-lg font-bold border-b border-surface-200"
         >
           +
         </button>
         <button
           @click="zoomOut"
-          class="block w-full px-3 py-2 text-gray-700 hover:bg-gray-50 text-lg font-bold"
+          class="block w-full px-3 py-2 text-surface-700 hover:bg-surface-50 text-lg font-bold"
         >
           −
         </button>
@@ -113,7 +113,7 @@
       <button
         @click="centerOnUserLocation"
         :disabled="locationLoading"
-        class="bg-white rounded-lg shadow-md p-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        class="bg-white rounded-lg shadow-md p-2 text-surface-700 hover:bg-surface-50 disabled:opacity-50"
       >
         <component
           :is="locationLoading ? 'div' : 'MapPinIcon'"
@@ -126,7 +126,7 @@
     <div v-if="showFloatingSearch" class="absolute top-4 left-4 right-20 z-[1000]">
       <div class="bg-white rounded-lg shadow-lg p-3">
         <div class="flex items-center space-x-2">
-          <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <MagnifyingGlassIcon class="h-5 w-5 text-surface-400 flex-shrink-0" />
           <input
             v-model="floatingSearchQuery"
             type="text"
@@ -146,23 +146,23 @@
 
     <!-- Map Legend -->
     <div v-if="showLegend" class="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-3 z-[1000]">
-      <h4 class="text-xs font-semibold text-gray-900 mb-2">Legend</h4>
+      <h4 class="text-xs font-semibold text-surface-900 mb-2">Legend</h4>
       <div class="space-y-1">
         <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-          <span class="text-xs text-gray-600">Premium ($$$+)</span>
+          <div class="w-3 h-3 bg-error-500 rounded-full"></div>
+          <span class="text-xs text-surface-600">Premium ($$$+)</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-          <span class="text-xs text-gray-600">Moderate ($$)</span>
+          <div class="w-3 h-3 bg-info-500 rounded-full"></div>
+          <span class="text-xs text-surface-600">Moderate ($$)</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-          <span class="text-xs text-gray-600">Budget ($)</span>
+          <div class="w-3 h-3 bg-secondary-500 rounded-full"></div>
+          <span class="text-xs text-surface-600">Budget ($)</span>
         </div>
         <div class="flex items-center space-x-2">
           <img :src="userLocationIcon" class="w-4 h-4" />
-          <span class="text-xs text-gray-600">Your Location</span>
+          <span class="text-xs text-surface-600">Your Location</span>
         </div>
       </div>
     </div>
@@ -224,12 +224,12 @@ const selectedRestaurant = ref(null);
 
 // Configuration
 const circleOptions = {
-  color: '#4F46E5',
-  fillColor: '#4F46E5',
+  color: '#D97F71', // primary-600 (coral)
+  fillColor: '#D97F71',
   fillOpacity: 0.1,
 };
 
-const userLocationIcon = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4F46E5" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
+const userLocationIcon = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#D97F71" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
 
 // Computed properties
 const visibleRestaurants = computed(() => {
@@ -244,11 +244,11 @@ const visibleRestaurants = computed(() => {
 // Methods
 const getMarkerIcon = (restaurant) => {
   const priceLevel = restaurant.priceLevel || 1;
-  let color = '#10B981'; // Green for budget
+  let color = '#86B66F'; // Secondary-600 for budget
 
-  if (priceLevel >= 4) color = '#DC2626'; // Red for premium
-  else if (priceLevel >= 3) color = '#F59E0B'; // Orange for expensive
-  else if (priceLevel >= 2) color = '#3B82F6'; // Blue for moderate
+  if (priceLevel >= 4) color = '#EB6A62'; // Error-500 for premium
+  else if (priceLevel >= 3) color = '#E3C969'; // Warning-600 for expensive
+  else if (priceLevel >= 2) color = '#7E7F9A'; // Info-500 for moderate
 
   return 'data:image/svg+xml;base64,' + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`);
 };

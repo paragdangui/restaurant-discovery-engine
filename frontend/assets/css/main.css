@@ -47,8 +47,9 @@
   body {
     margin: 0;
     padding: 0;
-    background-color: #fafafa;
-    color: #212121;
+    /* Light surface from Cadet gray scale to align with new theme */
+    background-color: #F1F5F7;
+    color: #3E444B;
     font-family: var(--font-family);
     font-weight: var(--font-weight-regular);
     line-height: 1.6;
