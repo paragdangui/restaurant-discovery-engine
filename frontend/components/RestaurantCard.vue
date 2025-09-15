@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 group overflow-hidden">
+  <div class="material-card group overflow-hidden hover:scale-[1.02] transition-all duration-300">
     <!-- Image Section -->
     <div class="relative h-48 overflow-hidden">
       <img
@@ -10,9 +10,9 @@
       />
       <div 
         v-else 
-        class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center"
+        class="w-full h-full bg-gradient-to-br from-surface-200 to-surface-300 flex items-center justify-center"
       >
-        <BuildingStorefrontIcon class="w-16 h-16 text-gray-400" />
+        <BuildingStorefrontIcon class="w-16 h-16 text-surface-400" />
       </div>
       
       <!-- Overlay with quick actions -->
@@ -22,14 +22,14 @@
             @click.stop="toggleFavorite"
             :class="[
               'p-2 rounded-full transition-colors',
-              isFavorite ? 'bg-red-500 text-white' : 'bg-white text-gray-600 hover:text-red-500'
+              isFavorite ? 'bg-error-500 text-white' : 'bg-white text-surface-600 hover:text-error-500'
             ]"
           >
             <HeartIcon :class="['w-4 h-4', isFavorite ? 'fill-current' : '']" />
           </button>
           <button
             @click.stop="shareRestaurant"
-            class="p-2 rounded-full bg-white text-gray-600 hover:text-primary-600 transition-colors"
+            class="p-2 rounded-full bg-white text-surface-600 hover:text-primary-600 transition-colors"
           >
             <ShareIcon class="w-4 h-4" />
           </button>
@@ -38,10 +38,10 @@
       
       <!-- Status badges -->
       <div class="absolute top-3 left-3 flex flex-col space-y-1">
-        <span v-if="restaurant.isClosed" class="px-2 py-1 bg-red-500 text-white text-xs font-medium rounded-full">
+        <span v-if="restaurant.isClosed" class="px-2 py-1 bg-error-500 text-white text-xs font-medium rounded-full">
           Closed
         </span>
-        <span v-else-if="isOpenNow" class="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+        <span v-else-if="isOpenNow" class="px-2 py-1 bg-primary-500 text-white text-xs font-medium rounded-full">
           Open Now
         </span>
         <span v-if="restaurant.priceLevel" class="px-2 py-1 bg-black bg-opacity-70 text-white text-xs font-medium rounded-full">
@@ -62,44 +62,44 @@
       <!-- Header -->
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">
+          <h3 class="text-lg font-semibold text-surface-900 truncate group-hover:text-primary-600 transition-colors">
             {{ restaurant.name }}
           </h3>
           <div v-if="restaurant.categories && restaurant.categories.length > 0" class="flex items-center mt-1">
-            <span class="text-sm text-gray-600">{{ formatCategories(restaurant.categories) }}</span>
+            <span class="text-sm text-surface-600">{{ formatCategories(restaurant.categories) }}</span>
           </div>
         </div>
         
         <!-- Rating -->
         <div v-if="restaurant.rating" class="flex items-center ml-3">
           <div class="flex items-center">
-            <StarIcon class="w-4 h-4 text-yellow-400 fill-current" />
-            <span class="ml-1 text-sm font-medium text-gray-900">{{ restaurant.rating }}</span>
+            <StarIcon class="w-4 h-4 text-warning-400 fill-current" />
+            <span class="ml-1 text-sm font-medium text-surface-900">{{ restaurant.rating }}</span>
           </div>
-          <span v-if="restaurant.reviewCount" class="ml-1 text-xs text-gray-500">
+          <span v-if="restaurant.reviewCount" class="ml-1 text-xs text-surface-500">
             ({{ restaurant.reviewCount }})
           </span>
         </div>
       </div>
       
       <!-- Description -->
-      <p v-if="restaurant.description" class="text-sm text-gray-600 mb-3 line-clamp-2">
+      <p v-if="restaurant.description" class="text-sm text-surface-600 mb-3 line-clamp-2">
         {{ restaurant.description }}
       </p>
       
       <!-- Details -->
       <div class="space-y-2 mb-4">
-        <div class="flex items-center text-sm text-gray-600">
+        <div class="flex items-center text-sm text-surface-600">
           <MapPinIcon class="w-4 h-4 mr-2 flex-shrink-0" />
           <span class="truncate">{{ restaurant.address }}</span>
         </div>
         
-        <div v-if="restaurant.phone" class="flex items-center text-sm text-gray-600">
+        <div v-if="restaurant.phone" class="flex items-center text-sm text-surface-600">
           <PhoneIcon class="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{{ restaurant.phone }}</span>
         </div>
         
-        <div v-if="formattedHours" class="flex items-center text-sm text-gray-600">
+        <div v-if="formattedHours" class="flex items-center text-sm text-surface-600">
           <ClockIcon class="w-4 h-4 mr-2 flex-shrink-0" />
           <span>{{ formattedHours }}</span>
         </div>
@@ -110,7 +110,7 @@
         <span 
           v-for="transaction in restaurant.transactions" 
           :key="transaction"
-          class="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+          class="px-2 py-1 bg-info-100 text-info-800 text-xs font-medium rounded-full"
         >
           {{ formatTransaction(transaction) }}
         </span>
@@ -121,14 +121,14 @@
         <div class="flex space-x-2">
           <button
             @click="$emit('view-details', restaurant)"
-            class="flex-1 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            class="material-button-primary"
           >
             View Details
           </button>
           <button
             v-if="restaurant.url"
             @click="openYelp"
-            class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            class="material-button-outlined"
           >
             Yelp
           </button>
@@ -138,32 +138,32 @@
         <div class="relative">
           <button
             @click="showMoreActions = !showMoreActions"
-            class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            class="p-2 text-surface-400 hover:text-surface-600 rounded-lg hover:bg-surface-100 transition-colors"
           >
             <EllipsisVerticalIcon class="w-5 h-5" />
           </button>
           
           <div
             v-if="showMoreActions"
-            class="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20"
+            class="absolute right-0 top-full mt-1 w-48 bg-white border border-surface-200 rounded-lg shadow-material-4 z-20"
           >
             <button
               @click="$emit('edit', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
             >
               <PencilIcon class="w-4 h-4 mr-2" />
               Edit
             </button>
             <button
               @click="getDirections"
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
             >
               <MapIcon class="w-4 h-4 mr-2" />
               Get Directions
             </button>
             <button
               @click="$emit('add-to-list', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
             >
               <PlusIcon class="w-4 h-4 mr-2" />
               Add to List
@@ -171,7 +171,7 @@
             <hr class="my-1" />
             <button
               @click="$emit('delete', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
+              class="w-full px-4 py-2 text-left text-sm text-error-600 hover:bg-error-50 flex items-center transition-colors"
             >
               <TrashIcon class="w-4 h-4 mr-2" />
               Delete
@@ -277,7 +277,7 @@ const openYelp = () => {
 
 const getDirections = () => {
   if (props.restaurant.latitude && props.restaurant.longitude) {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${props.restaurant.latitude},${props.restaurant.longitude}`;
+    const url = `https://www.openstreetmap.org/directions?from=&to=${props.restaurant.latitude},${props.restaurant.longitude}`;
     window.open(url, '_blank');
   }
 };

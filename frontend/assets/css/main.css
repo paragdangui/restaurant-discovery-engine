@@ -1,26 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
+/* Material Design CSS Custom Properties */
 @layer base {
   :root {
-    --color-primary-50: 239 246 255;
-    --color-primary-100: 219 234 254;
-    --color-primary-200: 191 219 254;
-    --color-primary-300: 147 197 253;
-    --color-primary-400: 96 165 250;
-    --color-primary-500: 59 130 246;
-    --color-primary-600: 37 99 235;
-    --color-primary-700: 29 78 216;
-    --color-primary-800: 30 64 175;
-    --color-primary-900: 30 58 138;
-    --color-primary-950: 23 37 84;
+    /* Material UI Typography */
+    --font-family: 'Roboto', system-ui, sans-serif;
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 700;
+    
+    /* Material UI Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Material UI Border Radius */
+    --border-radius-xs: 2px;
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 24px;
+    
+    /* Material UI Transitions */
+    --transition-standard: 0.2s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition-decelerate: 0.3s cubic-bezier(0.0, 0.0, 0.2, 1);
+    --transition-accelerate: 0.2s cubic-bezier(0.4, 0.0, 1, 1);
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    font-family: var(--font-family);
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #fafafa;
+    color: #212121;
+    font-family: var(--font-family);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.6;
   }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--text);
-  font-family: 'Inter', system-ui, sans-serif;
+/* Material UI Component Styles */
+@layer components {
+  .material-card {
+    @apply bg-white rounded-lg shadow-material-2 p-6;
+    transition: box-shadow var(--transition-standard);
+  }
+  
+  .material-card:hover {
+    @apply shadow-material-4;
+  }
+  
+  .material-button {
+    @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+    transition: all var(--transition-standard);
+    min-width: 64px;
+    height: 36px;
+  }
+  
+  .material-button-primary {
+    @apply material-button bg-primary-500 text-white shadow-material-2;
+    @apply hover:bg-primary-600 hover:shadow-material-4;
+    @apply focus:ring-primary-500;
+  }
+  
+  .material-button-secondary {
+    @apply material-button bg-secondary-500 text-white shadow-material-2;
+    @apply hover:bg-secondary-600 hover:shadow-material-4;
+    @apply focus:ring-secondary-500;
+  }
+  
+  .material-button-outlined {
+    @apply material-button bg-transparent text-primary-500 border border-primary-500;
+    @apply hover:bg-primary-50 hover:shadow-material-2;
+    @apply focus:ring-primary-500;
+  }
+  
+  .material-input {
+    @apply block w-full px-3 py-2 border border-surface-300 rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply placeholder-surface-500;
+    transition: all var(--transition-standard);
+  }
+  
+  .material-nav {
+    @apply bg-white shadow-material-2;
+  }
+  
+  .material-nav-item {
+    @apply px-3 py-2 text-sm font-medium text-surface-700 rounded-md;
+    @apply hover:text-primary-600 hover:bg-surface-50;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500;
+    transition: all var(--transition-standard);
+  }
+  
+  .material-nav-item.active {
+    @apply text-primary-600 bg-primary-50;
+  }
+  
+  .material-hero-section {
+    @apply bg-gradient-to-br from-primary-500 to-primary-700 text-white;
+  }
+  
+  .material-surface {
+    @apply bg-white;
+  }
+  
+  .material-surface-variant {
+    @apply bg-surface-50;
+  }
 }

@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api'
+// Route through Nuxt proxy when API is enabled; otherwise operate locally
+const API_BASE_URL = '/api'
+const API_ENABLED = (process.env.FAVORITES_API_ENABLED === 'true')
 
 export const useFavoriteStore = defineStore('favorites', {
   state: () => ({
@@ -93,21 +95,23 @@ export const useFavoriteStore = defineStore('favorites', {
     async fetchFavorites(userId) {
       this.loading = true
       this.error = null
-      
+
       try {
+        if (!API_ENABLED) {
+          // Local-only mode: just return current favorites
+          return this.favorites
+        }
+
         const response = await axios.get(`${API_BASE_URL}/favorites`, {
           params: { userId }
         })
-        
+
         this.favorites = response.data
-        
-        // Clear local favorites that are now synced
+        // Clear local flags for items that exist on server
         response.data.forEach(fav => {
           this.localFavorites.delete(fav.restaurantId)
         })
-        
         return response.data
-        
       } catch (error) {
         console.error('Error fetching favorites:', error)
         this.error = error.response?.data?.message || 'Failed to fetch favorites'
@@ -123,22 +127,36 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          // Local-only favorite object
+          const local = {
+            id: `local-${Date.now()}`,
+            restaurantId,
+            collectionId: collectionId || this.defaultCollection?.id || null,
+            notes,
+            createdAt: new Date().toISOString()
+          }
+          this.favorites.push(local)
+          this.localFavorites.add(restaurantId)
+          return local
+        }
+
         const favoriteData = {
           restaurantId,
           collectionId: collectionId || this.defaultCollection?.id,
           notes
         }
-        
+
         const response = await axios.post(`${API_BASE_URL}/favorites`, favoriteData)
-        
+
         // Add to favorites array
         this.favorites.push(response.data)
-        
+
         // Remove from local favorites if it was there
         this.localFavorites.delete(restaurantId)
-        
+
         return response.data
-        
+
       } catch (error) {
         console.error('Error adding favorite:', error)
         
@@ -166,18 +184,19 @@ export const useFavoriteStore = defineStore('favorites', {
       
       try {
         const favorite = this.getFavoriteByRestaurant(restaurantId)
-        if (favorite) {
+        if (API_ENABLED && favorite) {
           await axios.delete(`${API_BASE_URL}/favorites/${favorite.id}`)
-          
-          // Remove from favorites array
+        }
+        // Remove from favorites array
+        if (favorite) {
           this.favorites = this.favorites.filter(fav => fav.id !== favorite.id)
         }
-        
+
         // Remove from local favorites
         this.localFavorites.delete(restaurantId)
-        
+
         return true
-        
+
       } catch (error) {
         console.error('Error removing favorite:', error)
         
@@ -212,6 +231,14 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          const index = this.favorites.findIndex(fav => fav.id === favoriteId)
+          if (index !== -1) {
+            this.favorites[index] = { ...this.favorites[index], notes }
+          }
+          return this.favorites[index]
+        }
+
         const response = await axios.patch(`${API_BASE_URL}/favorites/${favoriteId}`, {
           notes
         })
@@ -239,6 +266,14 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          const index = this.favorites.findIndex(fav => fav.id === favoriteId)
+          if (index !== -1) {
+            this.favorites[index] = { ...this.favorites[index], collectionId: newCollectionId }
+          }
+          return this.favorites[index]
+        }
+
         const response = await axios.patch(`${API_BASE_URL}/favorites/${favoriteId}`, {
           collectionId: newCollectionId
         })
@@ -266,6 +301,14 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          // Minimal local collections
+          if (this.collections.length === 0) {
+            this.collections = [{ id: 'local-default', name: 'Favorites', isDefault: true }]
+          }
+          return this.collections
+        }
+
         const response = await axios.get(`${API_BASE_URL}/collections`, {
           params: { userId }
         })
@@ -288,6 +331,12 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          const col = { id: `local-col-${Date.now()}`, name, description, isDefault }
+          this.collections.push(col)
+          return col
+        }
+
         const response = await axios.post(`${API_BASE_URL}/collections`, {
           name,
           description,
@@ -312,6 +361,14 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
+        if (!API_ENABLED) {
+          const index = this.collections.findIndex(col => col.id === collectionId)
+          if (index !== -1) {
+            this.collections[index] = { ...this.collections[index], ...updates }
+          }
+          return this.collections[index]
+        }
+
         const response = await axios.patch(`${API_BASE_URL}/collections/${collectionId}`, updates)
         
         // Update in collections array
@@ -337,7 +394,9 @@ export const useFavoriteStore = defineStore('favorites', {
       this.error = null
       
       try {
-        await axios.delete(`${API_BASE_URL}/collections/${collectionId}`)
+        if (API_ENABLED) {
+          await axios.delete(`${API_BASE_URL}/collections/${collectionId}`)
+        }
         
         // Remove from collections array
         this.collections = this.collections.filter(col => col.id !== collectionId)
@@ -461,7 +520,9 @@ export const useFavoriteStore = defineStore('favorites', {
       this.loading = true
       
       try {
-        await axios.delete(`${API_BASE_URL}/favorites/all`)
+        if (API_ENABLED) {
+          await axios.delete(`${API_BASE_URL}/favorites/all`)
+        }
         this.favorites = []
         this.localFavorites.clear()
         this.syncPending = []

@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api'
+// Route all frontend calls through Nuxt proxy
+const API_BASE_URL = '/api'
 
 export const useAIStore = defineStore('ai', {
   state: () => ({
@@ -124,17 +125,19 @@ export const useAIStore = defineStore('ai', {
       this.error = null
       
       try {
-        const response = await axios.post(`${API_BASE_URL}/ai/recommendations`, {
-          restaurants: restaurants.map(r => r.id),
-          userPreferences: this.userPreferences,
-          searchContext,
-          usePersonalization: this.usePersonalization
+        // Align with backend route: GET /restaurants/recommendations with preferences in query
+        const response = await axios.get(`${API_BASE_URL}/restaurants/recommendations`, {
+          params: {
+            preferences: JSON.stringify({ ...this.userPreferences, ...searchContext }),
+          }
         })
-        
-        this.recommendations = response.data.recommendations
-        this.personalizedRecommendations = response.data.recommendations.filter(
-          rec => rec.personalized
-        )
+
+        const payload = Array.isArray(response.data) ? response.data : response.data?.recommendations || []
+        // Normalize to recommendation objects containing restaurant
+        this.recommendations = payload
+        this.personalizedRecommendations = Array.isArray(payload)
+          ? payload.filter(rec => rec.personalized || rec.matchScore >= 0.7)
+          : []
         
         // Add to history
         this.recommendationHistory.unshift({
@@ -163,31 +166,46 @@ export const useAIStore = defineStore('ai', {
     },
     
     // Analyze restaurant reviews
-    async analyzeReviews(restaurantId, force = false) {
+    async analyzeReviews(yelpId, force = false) {
       if (!this.enableAI) return null
       
       // Check cache first
       if (!force) {
-        const cached = this.getCachedAnalysis(`reviews-${restaurantId}`)
+        const cached = this.getCachedAnalysis(`reviews-${yelpId}`)
         if (cached) return cached
       }
       
       this.reviewAnalysisLoading = true
       
       try {
+        // Use backend route that returns reviews with sentiment and generate a simple summary client-side
         const response = await axios.get(
-          `${API_BASE_URL}/restaurants/${restaurantId}/reviews/analysis`
+          `${API_BASE_URL}/restaurants/${yelpId}/reviews`
         )
-        
-        const { summary, sentiment } = response.data
-        
+
+        const reviews = response.data?.reviews || []
+        const sentiment = reviews.map(r => r.sentiment).filter(Boolean)
+        const summary = {
+          overallSentiment: sentiment.length
+            ? sentiment.reduce((acc, s) => ({
+                score: acc.score + (s.score || 0),
+                confidence: Math.min(1, (acc.confidence + (s.confidence || 0)) / 2),
+                label: acc.label
+              }), { score: 0, confidence: 0.7, label: 'neutral', keywords: [] })
+            : { score: 0, confidence: 0.7, label: 'neutral', keywords: [] },
+          commonPraises: [],
+          commonComplaints: [],
+          topMentions: [],
+          recommendationStatus: 'mixed'
+        }
+
         // Store in state
-        this.reviewSummaries.set(restaurantId, summary)
-        this.sentimentAnalysis.set(restaurantId, sentiment)
-        
+        this.reviewSummaries.set(yelpId, summary)
+        this.sentimentAnalysis.set(yelpId, sentiment)
+
         // Cache the result
-        this.analysisCache.set(`reviews-${restaurantId}`, {
-          data: response.data,
+        this.analysisCache.set(`reviews-${yelpId}`, {
+          data: { summary, sentiment },
           timestamp: Date.now()
         })
         
@@ -203,14 +221,14 @@ export const useAIStore = defineStore('ai', {
     },
     
     // Analyze menu for dietary restrictions
-    async analyzeMenuForDietary(restaurantId, dietaryRestrictions = null) {
+    async analyzeMenuForDietary(yelpId, dietaryRestrictions = null) {
       if (!this.enableAI) return null
       
       const restrictions = dietaryRestrictions || this.activeDietaryRestrictions
       if (!restrictions.length) return null
       
       // Check cache
-      const cacheKey = `menu-dietary-${restaurantId}-${restrictions.map(r => r.id).join(',')}`
+      const cacheKey = `menu-dietary-${yelpId}-${restrictions.map(r => r.id).join(',')}`
       const cached = this.getCachedAnalysis(cacheKey)
       if (cached) return cached
       
@@ -218,7 +236,7 @@ export const useAIStore = defineStore('ai', {
       
       try {
         const response = await axios.post(
-          `${API_BASE_URL}/restaurants/${restaurantId}/menu/analyze`,
+          `${API_BASE_URL}/restaurants/${yelpId}/analyze-menu`,
           {
             dietaryRestrictions: restrictions,
             language: this.analysisLanguage
@@ -228,8 +246,8 @@ export const useAIStore = defineStore('ai', {
         const analysis = response.data
         
         // Store in state
-        this.menuAnalysis.set(restaurantId, analysis.menuAnalysis)
-        this.dietaryCompatibility.set(restaurantId, analysis.compatibility)
+        this.menuAnalysis.set(yelpId, analysis.menuAnalysis)
+        this.dietaryCompatibility.set(yelpId, analysis.compatibility)
         
         // Cache the result
         this.analysisCache.set(cacheKey, {

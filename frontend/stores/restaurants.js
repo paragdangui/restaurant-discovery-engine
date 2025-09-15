@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
 
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3001/api'
-
 export const useRestaurantStore = defineStore('restaurants', {
   state: () => ({
     // Restaurant data
@@ -57,6 +55,7 @@ export const useRestaurantStore = defineStore('restaurants', {
   }),
 
   getters: {
+    apiBase: () => '/api',
     // Get restaurants with filters applied
     filteredRestaurants: (state) => {
       let filtered = [...state.restaurants]
@@ -147,12 +146,58 @@ export const useRestaurantStore = defineStore('restaurants', {
   actions: {
     // Search restaurants via Yelp API
     async searchRestaurants(params = {}) {
+      // Normalize inputs
+      const requestedPage = params.page || this.currentPage
+      const pageSize = params.limit || this.pageSize
+
+      // Map UI params -> backend DTO (SearchRestaurantDto)
+      const term = params.query || this.searchQuery || ''
+      const locationInput = params.location || this.searchLocation || ''
+
+      let latitude = undefined
+      let longitude = undefined
+      let location = undefined
+
+      // Accept "lat,lng" string or object {lat,lng}
+      if (typeof locationInput === 'string' && locationInput.includes(',')) {
+        const [latStr, lngStr] = locationInput.split(',')
+        latitude = parseFloat(latStr)
+        longitude = parseFloat(lngStr)
+      } else if (locationInput && typeof locationInput === 'object') {
+        latitude = locationInput.lat
+        longitude = locationInput.lng
+      } else if (typeof locationInput === 'string' && locationInput.trim()) {
+        location = locationInput
+      }
+
+      // Filters mapping
+      const filters = params.filters || {}
+      const priceArray = filters.priceRange || []
+      const price = Array.isArray(priceArray) && priceArray.length
+        ? priceArray.join(',')
+        : undefined
+
+      // Yelp sort mapping
+      const sortMap = {
+        relevance: 'best_match',
+        distance: 'distance',
+        rating: 'rating',
+        review_count: 'review_count'
+      }
+      const sortBy = sortMap[filters.sortBy || this.searchFilters.sortBy || 'relevance']
+
       const searchParams = {
-        query: params.query || this.searchQuery,
-        location: params.location || this.searchLocation,
-        ...params.filters,
-        page: params.page || this.currentPage,
-        limit: params.limit || this.pageSize
+        term,
+        location,
+        latitude,
+        longitude,
+        radius: filters.distance || undefined,
+        // categories: derive from cuisines if needed; omit if not reliable
+        price,
+        openNow: !!filters.openNow,
+        sortBy,
+        limit: pageSize,
+        offset: (requestedPage - 1) * pageSize
       }
       
       // Generate cache key
@@ -171,22 +216,23 @@ export const useRestaurantStore = defineStore('restaurants', {
       this.lastSearchError = null
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/restaurants/search`, {
+        const response = await axios.get(`${this.apiBase}/restaurants/search`, {
           params: searchParams
         })
-        
-        const { restaurants, total, page } = response.data
-        
+
+        const { restaurants, total } = response.data
+
         // Update state
         this.restaurants = restaurants
         this.searchResults = restaurants
-        this.totalCount = total
-        this.currentPage = page
-        this.totalPages = Math.ceil(total / this.pageSize)
+        this.totalCount = total || (restaurants?.length || 0)
+        this.currentPage = requestedPage
+        this.totalPages = Math.ceil((this.totalCount || 0) / this.pageSize)
         
         // Update search parameters
-        if (searchParams.query) this.searchQuery = searchParams.query
-        if (searchParams.location) this.searchLocation = searchParams.location
+        if (term) this.searchQuery = term
+        // Preserve original user intent for location field
+        if (params.location !== undefined) this.searchLocation = params.location
         
         // Cache the results
         this.searchCache.set(cacheKey, {
@@ -221,7 +267,7 @@ export const useRestaurantStore = defineStore('restaurants', {
       this.nearbyLoading = true
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/restaurants/nearby`, {
+        const response = await axios.get(`${this.apiBase}/restaurants/nearby`, {
           params: { lat, lng, radius }
         })
         
@@ -242,7 +288,7 @@ export const useRestaurantStore = defineStore('restaurants', {
       this.loading = true
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/restaurants/trending`)
+        const response = await axios.get(`${this.apiBase}/restaurants/trending`)
         this.trendingRestaurants = response.data
         return response.data
         
@@ -260,7 +306,7 @@ export const useRestaurantStore = defineStore('restaurants', {
       this.detailLoading = true
       
       try {
-        const response = await axios.get(`${API_BASE_URL}/restaurants/${id}`)
+        const response = await axios.get(`${this.apiBase}/restaurants/${id}`)
         this.currentRestaurant = response.data
         return response.data
         
@@ -278,7 +324,7 @@ export const useRestaurantStore = defineStore('restaurants', {
       this.loading = true
       
       try {
-        const response = await axios.post(`${API_BASE_URL}/restaurants/${yelpId}/sync`)
+        const response = await axios.post(`${this.apiBase}/restaurants/${yelpId}/sync`)
         return response.data
         
       } catch (error) {
@@ -356,6 +402,23 @@ export const useRestaurantStore = defineStore('restaurants', {
     async previousPage() {
       return this.goToPage(this.currentPage - 1)
     },
+
+    // CRUD helpers (used by UI actions)
+    async deleteRestaurant(id) {
+      try {
+        await axios.delete(`${this.apiBase}/restaurants/${id}`)
+        // Optimistically remove from current lists
+        this.restaurants = this.restaurants.filter(r => r.id !== id)
+        this.searchResults = this.searchResults.filter(r => r.id !== id)
+        this.totalCount = Math.max(0, this.totalCount - 1)
+        this.totalPages = Math.ceil((this.totalCount || 0) / this.pageSize)
+        return true
+      } catch (error) {
+        console.error('Error deleting restaurant:', error)
+        this.error = error.response?.data?.message || 'Failed to delete restaurant'
+        throw error
+      }
+    },
     
     // Search history management
     addToSearchHistory(searchItem) {
@@ -406,10 +469,10 @@ export const useRestaurantStore = defineStore('restaurants', {
     }
   },
 
-  // Persist state to localStorage
-  persist: {
-    key: 'restaurant-store',
-    storage: localStorage,
-    pick: ['searchHistory', 'searchFilters', 'userLocation', 'mapCenter']
-  }
+  // Persist state to localStorage (disabled for now to fix SSR issues)
+  // persist: process.client ? {
+  //   key: 'restaurant-store',
+  //   storage: localStorage,
+  //   pick: ['searchHistory', 'searchFilters', 'userLocation', 'mapCenter']
+  // } : false
 })

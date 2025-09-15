@@ -463,7 +463,7 @@ const openYelp = () => {
 
 const getDirections = () => {
   if (props.restaurant?.latitude && props.restaurant?.longitude) {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${props.restaurant.latitude},${props.restaurant.longitude}`
+    const url = `https://www.openstreetmap.org/directions?from=&to=${props.restaurant.latitude},${props.restaurant.longitude}`
     window.open(url, '_blank')
   }
 }

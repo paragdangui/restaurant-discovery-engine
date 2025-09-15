@@ -79,7 +79,6 @@
                 <option value="distance">Distance</option>
                 <option value="rating">Rating</option>
                 <option value="review_count">Most Reviewed</option>
-                <option value="price">Price</option>
               </select>
             </div>
             

@@ -2,109 +2,97 @@
   <div class="relative w-full h-full">
     <!-- Map Container -->
     <div class="w-full h-full" ref="mapContainer">
-      <GoogleMap
-        :api-key="mapApiKey"
-        :center="mapCenter"
-        :zoom="mapZoom"
-        :options="mapOptions"
-        @ready="onMapReady"
-        @click="onMapClick"
-        class="w-full h-full"
-      >
-        <!-- Restaurant Markers -->
-        <Marker
-          v-for="restaurant in visibleRestaurants"
-          :key="restaurant.id"
-          :position="{ lat: restaurant.latitude, lng: restaurant.longitude }"
-          :options="getMarkerOptions(restaurant)"
-          @click="selectRestaurant(restaurant)"
-        />
-        
-        <!-- User Location Marker -->
-        <Marker
-          v-if="userLocation"
-          :position="userLocation"
-          :options="userLocationMarkerOptions"
-        />
-        
-        <!-- Search Area Circle -->
-        <Circle
-          v-if="searchArea"
-          :center="searchArea.center"
-          :radius="searchArea.radius"
-          :options="circleOptions"
-        />
-        
-        <!-- Info Window for Selected Restaurant -->
-        <InfoWindow
-          v-if="selectedRestaurant && selectedRestaurantPosition"
-          :position="selectedRestaurantPosition"
-          :options="infoWindowOptions"
-          @closeclick="closeInfoWindow"
+      <client-only>
+        <l-map
+          ref="map"
+          :zoom="mapZoom"
+          :center="mapCenter"
+          @ready="onMapReady"
+          @click="onMapClick"
+          class="w-full h-full"
         >
-          <div class="p-3 min-w-[280px]">
-            <div class="flex items-start space-x-3">
-              <img
-                v-if="selectedRestaurant.photos && selectedRestaurant.photos.length > 0"
-                :src="selectedRestaurant.photos[0]"
-                :alt="selectedRestaurant.name"
-                class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-900 text-sm truncate">
-                  {{ selectedRestaurant.name }}
-                </h3>
-                <div class="flex items-center mt-1">
-                  <div class="flex items-center">
-                    <StarIcon class="w-4 h-4 text-yellow-400 fill-current" />
-                    <span class="ml-1 text-sm text-gray-600">{{ selectedRestaurant.rating }}</span>
+          <l-tile-layer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
+          />
+
+          <!-- Restaurant Markers -->
+          <l-marker
+            v-for="restaurant in visibleRestaurants"
+            :key="restaurant.id"
+            :lat-lng="[restaurant.latitude, restaurant.longitude]"
+            @click="selectRestaurant(restaurant)"
+          >
+            <l-icon :icon-url="getMarkerIcon(restaurant)" :icon-size="[32, 32]" />
+          </l-marker>
+
+          <!-- User Location Marker -->
+          <l-marker
+            v-if="userLocation"
+            :lat-lng="userLocation"
+          >
+            <l-icon :icon-url="userLocationIcon" :icon-size="[32, 32]" />
+          </l-marker>
+
+          <!-- Search Area Circle -->
+          <l-circle
+            v-if="searchArea"
+            :lat-lng="searchArea.center"
+            :radius="searchArea.radius"
+            :color="circleOptions.color"
+            :fill-color="circleOptions.fillColor"
+            :fill-opacity="circleOptions.fillOpacity"
+          />
+
+          <!-- Info Window for Selected Restaurant -->
+          <l-popup v-if="selectedRestaurant" :lat-lng="[selectedRestaurant.latitude, selectedRestaurant.longitude]">
+            <div class="p-3 min-w-[280px]">
+              <div class="flex items-start space-x-3">
+                <img
+                  v-if="selectedRestaurant.photos && selectedRestaurant.photos.length > 0"
+                  :src="selectedRestaurant.photos[0]"
+                  :alt="selectedRestaurant.name"
+                  class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-semibold text-gray-900 text-sm truncate">
+                    {{ selectedRestaurant.name }}
+                  </h3>
+                  <div class="flex items-center mt-1">
+                    <div class="flex items-center">
+                      <StarIcon class="w-4 h-4 text-yellow-400 fill-current" />
+                      <span class="ml-1 text-sm text-gray-600">{{ selectedRestaurant.rating }}</span>
+                    </div>
+                    <span class="mx-2 text-gray-300">•</span>
+                    <span class="text-sm text-gray-600">{{ formatPrice(selectedRestaurant.priceLevel) }}</span>
                   </div>
-                  <span class="mx-2 text-gray-300">•</span>
-                  <span class="text-sm text-gray-600">{{ formatPrice(selectedRestaurant.priceLevel) }}</span>
+                  <p class="text-xs text-gray-500 mt-1 truncate">
+                    {{ selectedRestaurant.address }}
+                  </p>
                 </div>
-                <p class="text-xs text-gray-500 mt-1 truncate">
-                  {{ selectedRestaurant.address }}
-                </p>
+              </div>
+              <div class="mt-3 flex space-x-2">
+                <button
+                  @click="$emit('view-details', selectedRestaurant)"
+                  class="flex-1 px-3 py-2 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700"
+                >
+                  View Details
+                </button>
+                <button
+                  @click="getDirections(selectedRestaurant)"
+                  class="px-3 py-2 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
+                >
+                  Directions
+                </button>
               </div>
             </div>
-            <div class="mt-3 flex space-x-2">
-              <button
-                @click="$emit('view-details', selectedRestaurant)"
-                class="flex-1 px-3 py-2 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700"
-              >
-                View Details
-              </button>
-              <button
-                @click="getDirections(selectedRestaurant)"
-                class="px-3 py-2 border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50"
-              >
-                Directions
-              </button>
-            </div>
-          </div>
-        </InfoWindow>
-      </GoogleMap>
+          </l-popup>
+        </l-map>
+      </client-only>
     </div>
-    
+
     <!-- Map Controls -->
-    <div class="absolute top-4 right-4 flex flex-col space-y-2">
-      <!-- Map Type Toggle -->
-      <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <button
-          v-for="type in mapTypes"
-          :key="type.value"
-          @click="changeMapType(type.value)"
-          :class="[
-            'w-full px-3 py-2 text-xs font-medium transition-colors',
-            currentMapType === type.value
-              ? 'bg-primary-600 text-white'
-              : 'text-gray-700 hover:bg-gray-50'
-          ]"
-        >
-          {{ type.label }}
-        </button>
-      </div>
-      
+    <div class="absolute top-4 right-4 flex flex-col space-y-2 z-[1000]">
       <!-- Zoom Controls -->
       <div class="bg-white rounded-lg shadow-md">
         <button
@@ -120,7 +108,7 @@
           −
         </button>
       </div>
-      
+
       <!-- Current Location Button -->
       <button
         @click="centerOnUserLocation"
@@ -133,9 +121,9 @@
         />
       </button>
     </div>
-    
+
     <!-- Floating Search Box -->
-    <div v-if="showFloatingSearch" class="absolute top-4 left-4 right-20 z-10">
+    <div v-if="showFloatingSearch" class="absolute top-4 left-4 right-20 z-[1000]">
       <div class="bg-white rounded-lg shadow-lg p-3">
         <div class="flex items-center space-x-2">
           <MagnifyingGlassIcon class="h-5 w-5 text-gray-400 flex-shrink-0" />
@@ -155,9 +143,9 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Map Legend -->
-    <div v-if="showLegend" class="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-3">
+    <div v-if="showLegend" class="absolute bottom-4 left-4 bg-white rounded-lg shadow-md p-3 z-[1000]">
       <h4 class="text-xs font-semibold text-gray-900 mb-2">Legend</h4>
       <div class="space-y-1">
         <div class="flex items-center space-x-2">
@@ -173,31 +161,20 @@
           <span class="text-xs text-gray-600">Budget ($)</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+          <img :src="userLocationIcon" class="w-4 h-4" />
           <span class="text-xs text-gray-600">Your Location</span>
         </div>
-      </div>
-    </div>
-    
-    <!-- Cluster Info -->
-    <div v-if="clusterInfo" class="absolute bottom-4 right-4 bg-white rounded-lg shadow-md p-3">
-      <div class="text-xs text-gray-600">
-        Showing {{ visibleRestaurants.length }} of {{ totalRestaurants }} restaurants
-      </div>
-      <div v-if="searchArea" class="text-xs text-gray-500 mt-1">
-        Within {{ (searchArea.radius / 1000).toFixed(1) }}km of search center
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { GoogleMap, Marker, InfoWindow, Circle } from 'vue3-google-map';
-import { 
-  StarIcon, 
-  MapPinIcon, 
-  MagnifyingGlassIcon 
-} from '@heroicons/vue/24/outline';
+import { ref, computed, watch, onMounted } from 'vue';
+import { StarIcon, MapPinIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
+import 'leaflet/dist/leaflet.css';
+import { LMap, LTileLayer, LMarker, LPopup, LCircle, LIcon } from '@vue-leaflet/vue-leaflet';
+import L from 'leaflet';
 
 const props = defineProps({
   restaurants: {
@@ -227,9 +204,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-  'restaurant-select', 
-  'view-details', 
-  'area-search', 
+  'restaurant-select',
+  'view-details',
+  'area-search',
   'bounds-change',
   'location-change'
 ]);
@@ -237,113 +214,52 @@ const emit = defineEmits([
 // Reactive data
 const mapContainer = ref(null);
 const map = ref(null);
-const mapCenter = ref({ lat: 40.7589, lng: -73.9851 }); // Default to NYC
+const mapCenter = ref([40.7589, -73.9851]); // Default to NYC
 const mapZoom = ref(13);
-const currentMapType = ref('roadmap');
 const userLocation = ref(null);
 const locationLoading = ref(false);
 const searchArea = ref(null);
 const floatingSearchQuery = ref('');
 const selectedRestaurant = ref(null);
-const selectedRestaurantPosition = ref(null);
 
 // Configuration
-const mapApiKey = process.env.GOOGLE_MAPS_API_KEY || '';
-
-const mapOptions = {
-  disableDefaultUI: false,
-  zoomControl: false,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: true,
-  styles: [
-    {
-      featureType: 'poi.business',
-      stylers: [{ visibility: 'off' }]
-    }
-  ]
-};
-
-const mapTypes = [
-  { value: 'roadmap', label: 'Map' },
-  { value: 'satellite', label: 'Satellite' },
-  { value: 'hybrid', label: 'Hybrid' }
-];
-
-const userLocationMarkerOptions = {
-  icon: {
-    path: google?.maps?.SymbolPath?.CIRCLE || 0,
-    scale: 8,
-    fillColor: '#4F46E5',
-    fillOpacity: 1,
-    strokeColor: '#ffffff',
-    strokeWeight: 2
-  }
-};
-
 const circleOptions = {
+  color: '#4F46E5',
   fillColor: '#4F46E5',
   fillOpacity: 0.1,
-  strokeColor: '#4F46E5',
-  strokeOpacity: 0.3,
-  strokeWeight: 1
 };
 
-const infoWindowOptions = {
-  pixelOffset: (google?.maps?.Size ? new google.maps.Size(0, -30) : { width: 0, height: -30 })
-};
+const userLocationIcon = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4F46E5" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
 
 // Computed properties
 const visibleRestaurants = computed(() => {
-  return props.restaurants.filter(restaurant => 
-    restaurant.latitude && 
+  return props.restaurants.filter(restaurant =>
+    restaurant.latitude &&
     restaurant.longitude &&
     restaurant.latitude !== 0 &&
     restaurant.longitude !== 0
   );
 });
 
-const totalRestaurants = computed(() => props.restaurants.length);
-
-const clusterInfo = computed(() => ({
-  visible: visibleRestaurants.value.length,
-  total: totalRestaurants.value
-}));
-
 // Methods
-const getMarkerOptions = (restaurant) => {
+const getMarkerIcon = (restaurant) => {
   const priceLevel = restaurant.priceLevel || 1;
   let color = '#10B981'; // Green for budget
-  
+
   if (priceLevel >= 4) color = '#DC2626'; // Red for premium
   else if (priceLevel >= 3) color = '#F59E0B'; // Orange for expensive
   else if (priceLevel >= 2) color = '#3B82F6'; // Blue for moderate
-  
-  return {
-    icon: {
-      path: google?.maps?.SymbolPath?.CIRCLE || 0,
-      scale: 8,
-      fillColor: color,
-      fillOpacity: 0.8,
-      strokeColor: '#ffffff',
-      strokeWeight: 2
-    },
-    title: restaurant.name
-  };
+
+  return 'data:image/svg+xml;base64,' + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`);
 };
 
 const selectRestaurant = (restaurant) => {
   selectedRestaurant.value = restaurant;
-  selectedRestaurantPosition.value = {
-    lat: restaurant.latitude,
-    lng: restaurant.longitude
-  };
   emit('restaurant-select', restaurant);
 };
 
 const closeInfoWindow = () => {
   selectedRestaurant.value = null;
-  selectedRestaurantPosition.value = null;
 };
 
 const formatPrice = (priceLevel) => {
@@ -353,52 +269,39 @@ const formatPrice = (priceLevel) => {
 
 const onMapReady = (mapInstance) => {
   map.value = mapInstance;
-  
-  // Set up bounds change listener
-  mapInstance.addListener('bounds_changed', () => {
-    const bounds = mapInstance.getBounds();
-    if (bounds) {
-      emit('bounds-change', {
-        north: bounds.getNorthEast().lat(),
-        south: bounds.getSouthWest().lat(),
-        east: bounds.getNorthEast().lng(),
-        west: bounds.getSouthWest().lng()
-      });
-    }
+
+  map.value.on('moveend', () => {
+    const bounds = map.value.getBounds();
+    emit('bounds-change', {
+      north: bounds.getNorth(),
+      south: bounds.getSouth(),
+      east: bounds.getEast(),
+      west: bounds.getWest()
+    });
   });
-  
-  // Initialize user location
+
   getCurrentLocation();
 };
 
-const onMapClick = (event) => {
+const onMapClick = () => {
   closeInfoWindow();
-};
-
-const changeMapType = (type) => {
-  currentMapType.value = type;
-  if (map.value) {
-    map.value.setMapTypeId(type);
-  }
 };
 
 const zoomIn = () => {
   if (map.value) {
-    mapZoom.value = Math.min(mapZoom.value + 1, 20);
-    map.value.setZoom(mapZoom.value);
+    map.value.zoomIn();
   }
 };
 
 const zoomOut = () => {
   if (map.value) {
-    mapZoom.value = Math.max(mapZoom.value - 1, 1);
-    map.value.setZoom(mapZoom.value);
+    map.value.zoomOut();
   }
 };
 
 const getCurrentLocation = async () => {
   if (!navigator.geolocation) return;
-  
+
   locationLoading.value = true;
   try {
     const position = await new Promise((resolve, reject) => {
@@ -408,9 +311,9 @@ const getCurrentLocation = async () => {
         maximumAge: 300000
       });
     });
-    
+
     const { latitude, longitude } = position.coords;
-    userLocation.value = { lat: latitude, lng: longitude };
+    userLocation.value = [latitude, longitude];
     emit('location-change', { lat: latitude, lng: longitude });
   } catch (error) {
     console.error('Error getting location:', error);
@@ -438,31 +341,25 @@ const centerOnUserLocation = async () => {
 
 const searchInArea = () => {
   if (!map.value || !floatingSearchQuery.value.trim()) return;
-  
+
   const center = map.value.getCenter();
   const bounds = map.value.getBounds();
-  
-  // Calculate approximate radius from bounds
-  const ne = bounds.getNorthEast();
-  const sw = bounds.getSouthWest();
-  const radius = google?.maps?.geometry?.spherical?.computeDistanceBetween(
-    center, ne
-  ) || props.searchRadius;
-  
+  const radius = center.distanceTo(bounds.getNorthEast());
+
   searchArea.value = {
-    center: { lat: center.lat(), lng: center.lng() },
+    center: [center.lat, center.lng],
     radius: Math.min(radius, 25000) // Max 25km
   };
-  
+
   emit('area-search', {
     query: floatingSearchQuery.value.trim(),
-    center: searchArea.value.center,
+    center: { lat: center.lat, lng: center.lng },
     radius: searchArea.value.radius
   });
 };
 
 const getDirections = (restaurant) => {
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.latitude},${restaurant.longitude}`;
+  const url = `https://www.openstreetmap.org/directions?from=&to=${restaurant.latitude},${restaurant.longitude}`;
   window.open(url, '_blank');
 };
 
@@ -472,9 +369,9 @@ watch(() => props.selectedRestaurantId, (newId) => {
     const restaurant = visibleRestaurants.value.find(r => r.id === newId);
     if (restaurant) {
       selectRestaurant(restaurant);
-      
+
       // Pan to restaurant
-      const position = { lat: restaurant.latitude, lng: restaurant.longitude };
+      const position = [restaurant.latitude, restaurant.longitude];
       mapCenter.value = position;
       if (map.value) {
         map.value.panTo(position);
@@ -488,26 +385,25 @@ watch(() => props.selectedRestaurantId, (newId) => {
 // Watch for restaurants changes and fit bounds
 watch(() => props.restaurants, (newRestaurants) => {
   if (newRestaurants.length > 0 && map.value) {
-    const bounds = new google.maps.LatLngBounds();
-    
+    const bounds = L.latLngBounds();
+
     // Include user location if available
     if (userLocation.value) {
       bounds.extend(userLocation.value);
     }
-    
+
     // Include all restaurants
     visibleRestaurants.value.forEach(restaurant => {
-      bounds.extend({ lat: restaurant.latitude, lng: restaurant.longitude });
+      bounds.extend([restaurant.latitude, restaurant.longitude]);
     });
-    
+
     // Only fit bounds if we have multiple points
     if (visibleRestaurants.value.length > 1 || userLocation.value) {
-      map.value.fitBounds(bounds, { padding: 50 });
+      map.value.fitBounds(bounds, { padding: [50, 50] });
     }
   }
 }, { immediate: true });
 
-// Lifecycle
 onMounted(() => {
   // Initialize search area if radius is provided
   if (props.searchRadius && userLocation.value) {
@@ -519,58 +415,15 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-/* Map container needs explicit dimensions */
-.map-container {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
+<style>
+/* You might need to adjust z-index values based on your layout */
+.leaflet-pane {
+  z-index: 1;
 }
-
-/* Info window styling */
-:deep(.gm-ui-hover-effect) {
-  opacity: 0.6;
+.leaflet-control {
+  z-index: 2;
 }
-
-:deep(.gm-style-iw) {
-  padding: 0;
-}
-
-:deep(.gm-style-iw-c) {
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-}
-
-:deep(.gm-style-iw-d) {
-  overflow: hidden !important;
-}
-
-/* Marker clustering styles */
-:deep(.cluster) {
-  background: #4F46E5;
-  border-radius: 50%;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 12px;
-}
-
-/* Control button hover states */
-.map-controls button:hover {
-  background-color: #f9fafb;
-}
-
-/* Floating search animation */
-.floating-search-enter-active,
-.floating-search-leave-active {
-  transition: all 0.3s ease;
-}
-
-.floating-search-enter-from,
-.floating-search-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
+.leaflet-top, .leaflet-bottom {
+    z-index: 1000;
 }
 </style>
