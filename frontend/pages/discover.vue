@@ -291,7 +291,12 @@ const showDetailModal = ref(false)
 const selectedRestaurant = ref(null)
 
 // Computed properties from stores
-const searchResults = computed(() => restaurantStore.restaurants)
+// Prefer search results; show trending only before first search
+const searchResults = computed(() => {
+  const hasSearched = !!restaurantStore.lastSearchTime
+  if (!hasSearched) return restaurantStore.trendingRestaurants || []
+  return restaurantStore.restaurants
+})
 const searchLoading = computed(() => restaurantStore.searchLoading)
 const searchQuery = computed(() => restaurantStore.searchQuery)
 const searchLocation = computed(() => restaurantStore.searchLocation)
