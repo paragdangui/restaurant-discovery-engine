@@ -11,10 +11,10 @@
     </div>
     
     <!-- Main Content -->
-    <div class="flex h-[calc(100vh-88px)]">
+    <div :class="['flex', isMapView ? 'h-[calc(100vh-88px)]' : '']">
       <!-- Results Sidebar -->
       <div 
-        class="bg-white border-r border-gray-200 overflow-hidden transition-all duration-300"
+        class="bg-white border-r border-gray-200 overflow-hidden transition-all duration-300 flex flex-col"
         :class="[
           showResults ? (isMapView ? 'w-96' : 'w-full') : 'w-0',
           !showResults && 'border-r-0'
@@ -113,23 +113,48 @@
           </div>
           
           <!-- Results -->
-          <div v-else class="divide-y divide-gray-200">
-            <div 
-              v-for="restaurant in paginatedResults" 
-              :key="restaurant.id"
-              class="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-              :class="{ 'bg-blue-50 border-l-4 border-blue-500': selectedRestaurantId === restaurant.id }"
-              @click="selectRestaurant(restaurant)"
-            >
-              <RestaurantCard 
-                :restaurant="restaurant"
-                :distance="getDistanceText(restaurant)"
-                @view-details="viewRestaurantDetails"
-                @edit="editRestaurant"
-                @delete="deleteRestaurant"
-                @add-to-list="addToFavorites"
-                @toggle-favorite="toggleFavorite"
-              />
+          <div v-else>
+            <!-- Narrow sidebar list in map/split views -->
+            <div v-if="isMapView" class="divide-y divide-gray-200">
+              <div
+                v-for="restaurant in paginatedResults"
+                :key="restaurant.id"
+                class="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                :class="{ 'bg-blue-50 border-l-4 border-blue-500': selectedRestaurantId === restaurant.id }"
+                @click="selectRestaurant(restaurant)"
+              >
+                <RestaurantCard
+                  :restaurant="restaurant"
+                  :distance="getDistanceText(restaurant)"
+                  :compact="true"
+                  @view-details="viewRestaurantDetails"
+                  @edit="editRestaurant"
+                  @delete="deleteRestaurant"
+                  @add-to-list="addToFavorites"
+                  @toggle-favorite="toggleFavorite"
+                />
+              </div>
+            </div>
+
+            <!-- Full-width grid in list-only view -->
+            <div v-else class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                v-for="restaurant in paginatedResults"
+                :key="restaurant.id"
+                class="cursor-pointer"
+                @click="selectRestaurant(restaurant)"
+              >
+                <RestaurantCard
+                  :restaurant="restaurant"
+                  :distance="getDistanceText(restaurant)"
+                  :compact="true"
+                  @view-details="viewRestaurantDetails"
+                  @edit="editRestaurant"
+                  @delete="deleteRestaurant"
+                  @add-to-list="addToFavorites"
+                  @toggle-favorite="toggleFavorite"
+                />
+              </div>
             </div>
           </div>
           

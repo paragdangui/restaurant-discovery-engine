@@ -1,12 +1,12 @@
 <template>
-  <div class="material-card group overflow-hidden hover:scale-[1.02] transition-all duration-300">
+  <div :class="['material-card group overflow-hidden hover:scale-[1.02] transition-all duration-300', compact ? '!p-4' : '']">
     <!-- Image Section -->
-    <div class="relative h-48 overflow-hidden">
+    <div :class="['relative overflow-hidden', compact ? 'aspect-[4/3]' : 'aspect-[16/9]']">
       <img
         v-if="restaurant.photos && restaurant.photos.length > 0"
         :src="restaurant.photos[0]"
         :alt="restaurant.name"
-        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
       <div 
         v-else 
@@ -58,7 +58,7 @@
     </div>
     
     <!-- Content Section -->
-    <div class="p-4">
+    <div :class="[compact ? 'p-3' : 'p-4']">
       <!-- Header -->
       <div class="flex justify-between items-start mb-2">
         <div class="flex-1 min-w-0">
@@ -88,7 +88,7 @@
       </p>
       
       <!-- Details -->
-      <div class="space-y-2 mb-4">
+      <div :class="['space-y-2', compact ? 'mb-3' : 'mb-4']">
         <div class="flex items-center text-sm text-surface-600">
           <MapPinIcon class="w-4 h-4 mr-2 flex-shrink-0" />
           <span class="truncate">{{ restaurant.address }}</span>
@@ -127,10 +127,10 @@
           </button>
           <button
             v-if="restaurant.url"
-            @click="openYelp"
+            @click="openWebsite"
             class="material-button-outlined"
           >
-            Yelp
+            Website
           </button>
         </div>
         
@@ -207,6 +207,10 @@ const props = defineProps({
   distance: {
     type: String,
     default: null
+  },
+  compact: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -269,7 +273,7 @@ const shareRestaurant = async () => {
   }
 };
 
-const openYelp = () => {
+const openWebsite = () => {
   if (props.restaurant.url) {
     window.open(props.restaurant.url, '_blank');
   }

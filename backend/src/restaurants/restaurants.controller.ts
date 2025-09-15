@@ -26,8 +26,8 @@ export class RestaurantsController {
   constructor(private readonly restaurantsService: RestaurantsService) {}
 
   @Get('search')
-  @ApiOperation({ summary: 'Search restaurants using Yelp API' })
-  @ApiResponse({ status: 200, description: 'Returns search results from Yelp' })
+  @ApiOperation({ summary: 'Search restaurants using OSM/Overpass' })
+  @ApiResponse({ status: 200, description: 'Returns search results from OSM' })
   @ApiResponse({ status: 400, description: 'Invalid search parameters' })
   async searchRestaurants(@Query() searchDto: SearchRestaurantDto) {
     if (!searchDto.location && (!searchDto.latitude || !searchDto.longitude)) {
@@ -36,7 +36,7 @@ export class RestaurantsController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    return await this.restaurantsService.searchFromYelp(searchDto);
+    return await this.restaurantsService.searchFromPlaces(searchDto);
   }
 
   @Get('nearby')
@@ -66,50 +66,50 @@ export class RestaurantsController {
     return await this.restaurantsService.getRecommendations(userId, parsedPreferences);
   }
 
-  @Post(':yelpId/sync')
-  @ApiOperation({ summary: 'Sync restaurant data from Yelp' })
-  @ApiParam({ name: 'yelpId', description: 'Yelp business ID' })
+  @Post(':externalId/sync')
+  @ApiOperation({ summary: 'Sync restaurant data from OSM' })
+  @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
   @ApiResponse({ status: 200, description: 'Restaurant synced successfully', type: Restaurant })
-  @ApiResponse({ status: 404, description: 'Restaurant not found on Yelp' })
-  async syncFromYelp(@Param('yelpId') yelpId: string) {
-    return await this.restaurantsService.syncRestaurantFromYelp(yelpId);
+  @ApiResponse({ status: 404, description: 'Restaurant not found on OSM' })
+  async syncFromExternal(@Param('externalId') externalId: string) {
+    return await this.restaurantsService.syncRestaurantFromExternal(externalId);
   }
 
-  @Get(':yelpId/details')
-  @ApiOperation({ summary: 'Get restaurant details from Yelp' })
-  @ApiParam({ name: 'yelpId', description: 'Yelp business ID' })
-  @ApiResponse({ status: 200, description: 'Returns restaurant details from Yelp' })
-  @ApiResponse({ status: 404, description: 'Restaurant not found on Yelp' })
-  async getYelpDetails(@Param('yelpId') yelpId: string) {
-    return await this.restaurantsService.getYelpDetails(yelpId);
+  @Get(':externalId/details')
+  @ApiOperation({ summary: 'Get restaurant details from OSM' })
+  @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
+  @ApiResponse({ status: 200, description: 'Returns restaurant details from OSM' })
+  @ApiResponse({ status: 404, description: 'Restaurant not found on OSM' })
+  async getExternalDetails(@Param('externalId') externalId: string) {
+    return await this.restaurantsService.getExternalDetails(externalId);
   }
 
-  @Get(':yelpId/reviews')
-  @ApiOperation({ summary: 'Get restaurant reviews from Yelp' })
-  @ApiParam({ name: 'yelpId', description: 'Yelp business ID' })
-  @ApiResponse({ status: 200, description: 'Returns restaurant reviews from Yelp' })
-  @ApiResponse({ status: 404, description: 'Restaurant not found on Yelp' })
-  async getYelpReviews(@Param('yelpId') yelpId: string) {
-    return await this.restaurantsService.getYelpReviews(yelpId);
+  @Get(':externalId/reviews')
+  @ApiOperation({ summary: 'Get restaurant reviews (empty for OSM)' })
+  @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
+  @ApiResponse({ status: 200, description: 'Returns restaurant reviews (none for OSM)' })
+  @ApiResponse({ status: 404, description: 'Restaurant not found' })
+  async getExternalReviews(@Param('externalId') externalId: string) {
+    return await this.restaurantsService.getExternalReviews(externalId);
   }
 
-  @Get(':yelpId/reviews/summary')
+  @Get(':externalId/reviews/summary')
   @ApiOperation({ summary: 'Get AI-powered review summary' })
-  @ApiParam({ name: 'yelpId', description: 'Yelp business ID' })
+  @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
   @ApiResponse({ status: 200, description: 'Returns AI-generated review summary' })
-  async getReviewSummary(@Param('yelpId') yelpId: string) {
-    return await this.restaurantsService.getReviewSummary(yelpId);
+  async getReviewSummary(@Param('externalId') externalId: string) {
+    return await this.restaurantsService.getReviewSummary(externalId);
   }
 
-  @Post(':yelpId/analyze-menu')
+  @Post(':externalId/analyze-menu')
   @ApiOperation({ summary: 'Analyze menu for dietary restrictions' })
-  @ApiParam({ name: 'yelpId', description: 'Yelp business ID' })
+  @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
   @ApiResponse({ status: 200, description: 'Returns dietary compatibility analysis' })
   async analyzeMenu(
-    @Param('yelpId') yelpId: string,
+    @Param('externalId') externalId: string,
     @Body('dietaryRestrictions') dietaryRestrictions: string[],
   ) {
-    return await this.restaurantsService.analyzeDietaryCompatibility(yelpId, dietaryRestrictions);
+    return await this.restaurantsService.analyzeDietaryCompatibility(externalId, dietaryRestrictions);
   }
 
   @Post()

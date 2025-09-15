@@ -3,13 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestaurantsController } from './restaurants.controller';
 import { RestaurantsService } from './restaurants.service';
 import { Restaurant } from './entities/restaurant.entity';
-import { YelpModule } from '../yelp/yelp.module';
+import { PlacesModule } from '../places/places.module';
 import { AIModule } from '../ai/ai.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Restaurant]),
-    YelpModule,
+    PlacesModule,
     AIModule,
   ],
   controllers: [RestaurantsController],

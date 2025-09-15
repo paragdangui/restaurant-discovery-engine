@@ -2,7 +2,7 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { Restaurant } from '../restaurants/entities/restaurant.entity';
-import { YelpReview } from '../yelp/yelp.service';
+import { PlacesReview } from '../places/places.service';
 
 export interface UserPreferences {
   cuisineTypes?: string[];
@@ -102,7 +102,7 @@ export class AIService {
     }
   }
 
-  async analyzeReviewSentiment(reviews: YelpReview[]): Promise<SentimentAnalysis[]> {
+  async analyzeReviewSentiment(reviews: PlacesReview[]): Promise<SentimentAnalysis[]> {
     if (!this.openai) {
       return this.generateBasicSentiment(reviews);
     }
@@ -139,7 +139,7 @@ export class AIService {
     }
   }
 
-  async summarizeReviews(reviews: YelpReview[]): Promise<ReviewSummary> {
+  async summarizeReviews(reviews: PlacesReview[]): Promise<ReviewSummary> {
     if (!this.openai) {
       return this.generateBasicSummary(reviews);
     }
@@ -344,7 +344,7 @@ export class AIService {
     return tags;
   }
 
-  private generateBasicSentiment(reviews: YelpReview[]): SentimentAnalysis[] {
+  private generateBasicSentiment(reviews: PlacesReview[]): SentimentAnalysis[] {
     return reviews.map(review => ({
       score: (review.rating - 3) / 2, // Convert 1-5 rating to -1 to 1
       label: review.rating >= 4 ? 'positive' : review.rating >= 3 ? 'neutral' : 'negative',
@@ -353,7 +353,7 @@ export class AIService {
     }));
   }
 
-  private generateBasicSummary(reviews: YelpReview[]): ReviewSummary {
+  private generateBasicSummary(reviews: PlacesReview[]): ReviewSummary {
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
     
     return {

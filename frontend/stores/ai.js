@@ -166,12 +166,12 @@ export const useAIStore = defineStore('ai', {
     },
     
     // Analyze restaurant reviews
-    async analyzeReviews(yelpId, force = false) {
+    async analyzeReviews(externalId, force = false) {
       if (!this.enableAI) return null
       
       // Check cache first
       if (!force) {
-        const cached = this.getCachedAnalysis(`reviews-${yelpId}`)
+        const cached = this.getCachedAnalysis(`reviews-${externalId}`)
         if (cached) return cached
       }
       
@@ -180,7 +180,7 @@ export const useAIStore = defineStore('ai', {
       try {
         // Use backend route that returns reviews with sentiment and generate a simple summary client-side
         const response = await axios.get(
-          `${API_BASE_URL}/restaurants/${yelpId}/reviews`
+          `${API_BASE_URL}/restaurants/${externalId}/reviews`
         )
 
         const reviews = response.data?.reviews || []
@@ -200,11 +200,11 @@ export const useAIStore = defineStore('ai', {
         }
 
         // Store in state
-        this.reviewSummaries.set(yelpId, summary)
-        this.sentimentAnalysis.set(yelpId, sentiment)
+        this.reviewSummaries.set(externalId, summary)
+        this.sentimentAnalysis.set(externalId, sentiment)
 
         // Cache the result
-        this.analysisCache.set(`reviews-${yelpId}`, {
+        this.analysisCache.set(`reviews-${externalId}`, {
           data: { summary, sentiment },
           timestamp: Date.now()
         })
@@ -221,14 +221,14 @@ export const useAIStore = defineStore('ai', {
     },
     
     // Analyze menu for dietary restrictions
-    async analyzeMenuForDietary(yelpId, dietaryRestrictions = null) {
+    async analyzeMenuForDietary(externalId, dietaryRestrictions = null) {
       if (!this.enableAI) return null
       
       const restrictions = dietaryRestrictions || this.activeDietaryRestrictions
       if (!restrictions.length) return null
       
       // Check cache
-      const cacheKey = `menu-dietary-${yelpId}-${restrictions.map(r => r.id).join(',')}`
+      const cacheKey = `menu-dietary-${externalId}-${restrictions.map(r => r.id).join(',')}`
       const cached = this.getCachedAnalysis(cacheKey)
       if (cached) return cached
       
@@ -236,7 +236,7 @@ export const useAIStore = defineStore('ai', {
       
       try {
         const response = await axios.post(
-          `${API_BASE_URL}/restaurants/${yelpId}/analyze-menu`,
+          `${API_BASE_URL}/restaurants/${externalId}/analyze-menu`,
           {
             dietaryRestrictions: restrictions,
             language: this.analysisLanguage
@@ -246,8 +246,8 @@ export const useAIStore = defineStore('ai', {
         const analysis = response.data
         
         // Store in state
-        this.menuAnalysis.set(yelpId, analysis.menuAnalysis)
-        this.dietaryCompatibility.set(yelpId, analysis.compatibility)
+        this.menuAnalysis.set(externalId, analysis.menuAnalysis)
+        this.dietaryCompatibility.set(externalId, analysis.compatibility)
         
         // Cache the result
         this.analysisCache.set(cacheKey, {

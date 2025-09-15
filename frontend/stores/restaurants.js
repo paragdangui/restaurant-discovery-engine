@@ -144,7 +144,7 @@ export const useRestaurantStore = defineStore('restaurants', {
   },
 
   actions: {
-    // Search restaurants via Yelp API
+    // Search restaurants via Places API (OSM)
     async searchRestaurants(params = {}) {
       // Normalize inputs
       const requestedPage = params.page || this.currentPage
@@ -177,7 +177,7 @@ export const useRestaurantStore = defineStore('restaurants', {
         ? priceArray.join(',')
         : undefined
 
-      // Yelp sort mapping
+      // Sort mapping
       const sortMap = {
         relevance: 'best_match',
         distance: 'distance',
@@ -319,12 +319,12 @@ export const useRestaurantStore = defineStore('restaurants', {
       }
     },
     
-    // Sync restaurant from Yelp
-    async syncRestaurantFromYelp(yelpId) {
+    // Sync restaurant from external provider
+    async syncRestaurantFromExternal(externalId) {
       this.loading = true
       
       try {
-        const response = await axios.post(`${this.apiBase}/restaurants/${yelpId}/sync`)
+        const response = await axios.post(`${this.apiBase}/restaurants/${externalId}/sync`)
         return response.data
         
       } catch (error) {

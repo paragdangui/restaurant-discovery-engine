@@ -1,17 +1,18 @@
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
-import { YelpService } from './yelp.service';
+import { PlacesService } from './places.service';
 
 @Module({
   imports: [
     HttpModule.register({
-      timeout: 10000, // 10 second timeout
+      timeout: 10000,
       maxRedirects: 3,
     }),
     ConfigModule,
   ],
-  providers: [YelpService],
-  exports: [YelpService],
+  providers: [PlacesService],
+  exports: [PlacesService],
 })
-export class YelpModule {}
+export class PlacesModule {}
+

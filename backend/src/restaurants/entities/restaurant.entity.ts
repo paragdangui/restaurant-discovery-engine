@@ -7,9 +7,9 @@ export class Restaurant {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ description: 'Yelp Business ID' })
+  @ApiProperty({ description: 'External Place ID (e.g., OSM element id)' })
   @Column({ length: 255, unique: true, nullable: true })
-  yelpId?: string;
+  externalId?: string;
 
   @ApiProperty({ description: 'Restaurant name' })
   @Column({ length: 255 })
@@ -72,7 +72,7 @@ export class Restaurant {
     is_open_now: boolean;
   }[];
 
-  @ApiProperty({ description: 'Yelp URL' })
+  @ApiProperty({ description: 'External URL' })
   @Column({ type: 'text', nullable: true })
   url?: string;
 
@@ -96,7 +96,7 @@ export class Restaurant {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @ApiProperty({ description: 'Last synced from Yelp' })
+  @ApiProperty({ description: 'Last synced from external provider' })
   @Column({ type: 'datetime', nullable: true })
   lastSyncedAt?: Date;
 }

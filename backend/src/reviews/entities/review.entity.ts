@@ -12,9 +12,9 @@ export class Review {
   @Column()
   restaurantId: number;
 
-  @ApiProperty({ description: 'Yelp Review ID' })
+  @ApiProperty({ description: 'External Review ID' })
   @Column({ length: 255, unique: true, nullable: true })
-  yelpReviewId?: string;
+  externalReviewId?: string;
 
   @ApiProperty({ description: 'Review text content' })
   @Column({ type: 'text' })
@@ -52,7 +52,7 @@ export class Review {
   @Column({ default: 0 })
   helpfulVotes: number;
 
-  @ApiProperty({ description: 'Review URL on Yelp' })
+  @ApiProperty({ description: 'Review URL' })
   @Column({ type: 'text', nullable: true })
   url?: string;
 

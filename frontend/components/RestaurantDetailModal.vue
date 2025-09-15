@@ -133,10 +133,10 @@
                 <div class="flex space-x-2">
                   <button
                     v-if="restaurant?.url"
-                    @click="openYelp"
+                    @click="openWebsite"
                     class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    View on Yelp
+                    Open Website
                   </button>
                   <button
                     @click="getDirections"
@@ -455,7 +455,7 @@ const shareRestaurant = async () => {
   }
 }
 
-const openYelp = () => {
+const openWebsite = () => {
   if (props.restaurant?.url) {
     window.open(props.restaurant.url, '_blank')
   }
@@ -487,7 +487,7 @@ const loadAIInsights = async () => {
 }
 
 const loadRecentReviews = async () => {
-  if (!props.restaurant?.yelpId) return
+  if (!props.restaurant?.externalId) return
   
   try {
     // This would call the backend API to get recent reviews
