@@ -174,7 +174,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { StarIcon, MapPinIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline';
 import 'leaflet/dist/leaflet.css';
 import { LMap, LTileLayer, LMarker, LPopup, LCircle, LIcon } from '@vue-leaflet/vue-leaflet';
-import L from 'leaflet';
+// Important: do not import leaflet at module scope in SSR
+// We'll lazy-load it on client inside onMounted
+let Leaflet = null;
 
 const props = defineProps({
   restaurants: {
@@ -268,17 +270,22 @@ const formatPrice = (priceLevel) => {
 };
 
 const onMapReady = (mapInstance) => {
-  map.value = mapInstance;
+  // Vue Leaflet may pass either the Leaflet map or a component wrapper
+  const lmap = mapInstance && mapInstance.leafletObject ? mapInstance.leafletObject : mapInstance;
+  map.value = lmap;
 
-  map.value.on('moveend', () => {
-    const bounds = map.value.getBounds();
-    emit('bounds-change', {
-      north: bounds.getNorth(),
-      south: bounds.getSouth(),
-      east: bounds.getEast(),
-      west: bounds.getWest()
+  if (map.value && typeof map.value.on === 'function') {
+    map.value.on('moveend', () => {
+      if (!map.value || typeof map.value.getBounds !== 'function') return;
+      const bounds = map.value.getBounds();
+      emit('bounds-change', {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      });
     });
-  });
+  }
 
   getCurrentLocation();
 };
@@ -288,13 +295,13 @@ const onMapClick = () => {
 };
 
 const zoomIn = () => {
-  if (map.value) {
+  if (map.value && typeof map.value.zoomIn === 'function') {
     map.value.zoomIn();
   }
 };
 
 const zoomOut = () => {
-  if (map.value) {
+  if (map.value && typeof map.value.zoomOut === 'function') {
     map.value.zoomOut();
   }
 };
@@ -325,14 +332,14 @@ const getCurrentLocation = async () => {
 const centerOnUserLocation = async () => {
   if (userLocation.value) {
     mapCenter.value = userLocation.value;
-    if (map.value) {
+    if (map.value && typeof map.value.panTo === 'function') {
       map.value.panTo(userLocation.value);
     }
   } else {
     await getCurrentLocation();
     if (userLocation.value) {
       mapCenter.value = userLocation.value;
-      if (map.value) {
+      if (map.value && typeof map.value.panTo === 'function') {
         map.value.panTo(userLocation.value);
       }
     }
@@ -373,7 +380,7 @@ watch(() => props.selectedRestaurantId, (newId) => {
       // Pan to restaurant
       const position = [restaurant.latitude, restaurant.longitude];
       mapCenter.value = position;
-      if (map.value) {
+      if (map.value && typeof map.value.panTo === 'function') {
         map.value.panTo(position);
       }
     }
@@ -384,8 +391,10 @@ watch(() => props.selectedRestaurantId, (newId) => {
 
 // Watch for restaurants changes and fit bounds
 watch(() => props.restaurants, (newRestaurants) => {
-  if (newRestaurants.length > 0 && map.value) {
-    const bounds = L.latLngBounds();
+  if (newRestaurants.length > 0 && map.value && typeof map.value.fitBounds === 'function') {
+    // Ensure Leaflet is loaded on client before using it
+    if (!Leaflet) return;
+    const bounds = Leaflet.latLngBounds();
 
     // Include user location if available
     if (userLocation.value) {
@@ -404,7 +413,13 @@ watch(() => props.restaurants, (newRestaurants) => {
   }
 }, { immediate: true });
 
-onMounted(() => {
+onMounted(async () => {
+  // Lazy-load Leaflet on client only to avoid SSR "window is not defined"
+  if (!Leaflet) {
+    const mod = await import('leaflet');
+    Leaflet = mod.default || mod;
+  }
+
   // Initialize search area if radius is provided
   if (props.searchRadius && userLocation.value) {
     searchArea.value = {

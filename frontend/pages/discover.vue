@@ -273,15 +273,17 @@
     </div>
     
     <!-- Restaurant Detail Modal -->
-    <RestaurantDetailModal
-      v-if="showDetailModal"
-      :restaurant="selectedRestaurant"
-      :show="showDetailModal"
-      @close="closeDetailModal"
-      @edit="editRestaurant"
-      @delete="deleteRestaurant"
-      @add-to-favorites="addToFavorites"
-    />
+    <client-only>
+      <RestaurantDetailModal
+        v-if="showDetailModal"
+        :restaurant="selectedRestaurant"
+        :show="showDetailModal"
+        @close="closeDetailModal"
+        @edit="editRestaurant"
+        @delete="deleteRestaurant"
+        @add-to-favorites="addToFavorites"
+      />
+    </client-only>
   </div>
 </template>
 

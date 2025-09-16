@@ -552,7 +552,12 @@ export const useFavoriteStore = defineStore('favorites', {
   // Persist local favorites and sync queue
   persist: {
     key: 'favorite-store',
-    storage: localStorage,
+    // Guard localStorage for SSR; use no-op storage on server
+    storage: typeof window !== 'undefined' ? window.localStorage : {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {}
+    },
     pick: ['localFavorites', 'syncPending']
   }
 })

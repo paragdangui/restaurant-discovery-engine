@@ -493,7 +493,12 @@ export const useAIStore = defineStore('ai', {
   // Persist user preferences and settings
   persist: {
     key: 'ai-store',
-    storage: localStorage,
+    // Guard localStorage for SSR; use no-op storage on server
+    storage: typeof window !== 'undefined' ? window.localStorage : {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {}
+    },
     pick: [
       'userPreferences',
       'enableAI',
