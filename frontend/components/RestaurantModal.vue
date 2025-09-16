@@ -147,14 +147,29 @@ const resetForm = () => {
   }
 }
 
-// Watch for restaurant changes
-watch(() => props.restaurant, (newRestaurant) => {
-  if (newRestaurant) {
-    form.value = { ...newRestaurant }
-  } else {
-    resetForm()
-  }
-}, { immediate: true })
+// Watch for restaurant changes and map only allowed DTO fields
+watch(
+  () => props.restaurant,
+  (newRestaurant) => {
+    if (newRestaurant) {
+      // Only keep fields accepted by backend DTO
+      form.value = {
+        name: newRestaurant.name || '',
+        description: newRestaurant.description || '',
+        cuisine: newRestaurant.cuisine || '',
+        address: newRestaurant.address || '',
+        phone: newRestaurant.phone || '',
+        rating:
+          typeof newRestaurant.rating === 'number' && !Number.isNaN(newRestaurant.rating)
+            ? newRestaurant.rating
+            : null,
+      }
+    } else {
+      resetForm()
+    }
+  },
+  { immediate: true },
+)
 
 const close = () => {
   emit('update:modelValue', false)
@@ -169,10 +184,22 @@ const save = async () => {
       : `${config.public.apiBase}/restaurants`
     
     const method = isEditing.value ? 'PATCH' : 'POST'
-    
+
+    // Build payload with only allowed fields and valid types
+    const payload = {
+      name: form.value.name,
+      description: form.value.description || undefined,
+      cuisine: form.value.cuisine,
+      address: form.value.address,
+      phone: form.value.phone || undefined,
+    }
+    if (typeof form.value.rating === 'number' && !Number.isNaN(form.value.rating)) {
+      payload.rating = form.value.rating
+    }
+
     await $fetch(url, {
       method,
-      body: form.value
+      body: payload,
     })
     
     emit('saved')
