@@ -70,8 +70,10 @@
 	</div>
 </template>
 
+
 <script setup>
-	const { $fetch } = useNuxtApp();
+	// Import ofetch's $fetch explicitly for reliability in client handlers
+	import { $fetch } from 'ofetch'
 	const config = useRuntimeConfig();
 
 	const showAddModal = ref(false);

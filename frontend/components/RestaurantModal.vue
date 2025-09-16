@@ -110,7 +110,8 @@
 </template>
 
 <script setup>
-const { $fetch } = useNuxtApp()
+// Use ofetch directly to avoid '$fetch is not a function' issues
+import { $fetch } from 'ofetch'
 const config = useRuntimeConfig()
 
 const props = defineProps({
