@@ -307,6 +307,22 @@ export class RestaurantsService {
 		return await this.aiService.summarizeReviews(reviews.reviews);
 	}
 
+	async getRestaurantInsights(id: number): Promise<{
+		reviewSummary: string | null;
+		dietaryCompatibility: string[] | null;
+		bestTime: string | null;
+		recommendations: string[] | null;
+	}> {
+		const restaurant = await this.findOne(id);
+
+		return {
+			reviewSummary: this.buildReviewSummaryInsight(restaurant),
+			dietaryCompatibility: this.buildDietaryCompatibilityInsight(restaurant),
+			bestTime: this.buildBestTimeInsight(restaurant),
+			recommendations: this.buildDishRecommendations(restaurant),
+		};
+	}
+
 	async analyzeDietaryCompatibility(
 		externalId: string,
 		dietaryRestrictions: string[],
@@ -338,6 +354,229 @@ export class RestaurantsService {
 	}
 
 	// Helper Methods
+	private buildReviewSummaryInsight(restaurant: Restaurant): string | null {
+		const rating = this.parseRating(restaurant.rating);
+		const reviewCount = restaurant.reviewCount || 0;
+		const primaryCategory = this.extractPrimaryCategory(restaurant);
+		const descriptionHighlight = restaurant.description
+			?.split(/[.!?]/)
+			.map((sentence: string) => sentence.trim())
+			.filter(Boolean)[0];
+
+		const fragments: string[] = [];
+
+		if (rating) {
+			const ratingText = rating.toFixed(1);
+			const reviewPortion = reviewCount
+				? `from ${reviewCount} diners`
+				: 'from recent guests';
+			const categoryPortion = primaryCategory
+				? ` for its ${primaryCategory.toLowerCase()}`
+				: '';
+			fragments.push(`Rated ${ratingText}/5 ${reviewPortion}${categoryPortion}`.trim());
+		}
+
+		if (descriptionHighlight) {
+			fragments.push(descriptionHighlight.trim());
+		}
+
+		if (!fragments.length) {
+			if (primaryCategory) {
+				fragments.push(`${restaurant.name} is a local favorite for ${primaryCategory.toLowerCase()}`);
+			} else {
+				fragments.push(`${restaurant.name} is a local favorite worth checking out`);
+			}
+		}
+
+		const summary = fragments
+			.map((fragment) => (fragment.endsWith('.') ? fragment : `${fragment}.`))
+			.join(' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+
+		return summary || null;
+	}
+
+	private buildDietaryCompatibilityInsight(restaurant: Restaurant): string[] | null {
+		const tags = new Set<string>();
+		const categories = (restaurant.categories || [])
+			.map((category) => (category?.title || '').toLowerCase())
+			.filter(Boolean);
+		const attributes = restaurant.attributes || {};
+
+		const attributeIsEnabled = (key: string): boolean => {
+			const value = (attributes as Record<string, any>)[key];
+			if (typeof value === 'boolean') return value;
+			if (typeof value === 'string') {
+				return ['true', 'yes', '1'].includes(value.toLowerCase());
+			}
+			return false;
+		};
+
+		const hasCategory = (keyword: string): boolean =>
+			categories.some((category) => category.includes(keyword));
+
+		if (hasCategory('vegan') || attributeIsEnabled('diet:vegan')) {
+			tags.add('Vegan-friendly choices');
+		}
+
+		if (hasCategory('vegetarian') || attributeIsEnabled('diet:vegetarian')) {
+			tags.add('Vegetarian-friendly options');
+		}
+
+		if (hasCategory('gluten') || attributeIsEnabled('diet:gluten_free')) {
+			tags.add('Gluten-aware preparations');
+		}
+
+		if (hasCategory('seafood')) {
+			tags.add('Fresh seafood selections');
+		}
+
+		if (restaurant.priceLevel && restaurant.priceLevel >= 3) {
+			tags.add('Great for special occasions');
+		}
+
+		if (!tags.size) {
+			tags.add('Happy to tailor dishes by request');
+		}
+
+		return Array.from(tags);
+	}
+
+	private buildBestTimeInsight(restaurant: Restaurant): string | null {
+		const slots = (restaurant.hours?.[0]?.open || []).filter(
+			(slot) => Boolean(slot?.start),
+		);
+		if (!slots.length) {
+			const rating = this.parseRating(restaurant.rating);
+			if (rating && rating >= 4.5) {
+				return 'Reserve ahead for weekend dinners; weekday evenings are calmer after 6:00 PM.';
+			}
+			return 'Arrive before the dinner rush around 6:00 PM to grab a table without waiting.';
+		}
+
+		const weekendSlot = slots
+			.filter((slot) => slot.day >= 5)
+			.sort((a, b) => parseInt(a.start, 10) - parseInt(b.start, 10))[0];
+		if (weekendSlot) {
+			const start = this.formatTimeLabel(weekendSlot.start);
+			return `Weekend afternoons around ${start} balance energy with shorter waits.`;
+		}
+
+		const eveningSlot = slots
+			.filter((slot) => parseInt(slot.start, 10) >= 1700)
+			.sort((a, b) => parseInt(a.start, 10) - parseInt(b.start, 10))[0];
+		if (eveningSlot) {
+			const start = this.formatTimeLabel(eveningSlot.start);
+			const end = this.formatTimeLabel(eveningSlot.end);
+			return `Evenings between ${start} and ${end} have the best ambience.`;
+		}
+
+		const earliest = [...slots].sort(
+			(a, b) => parseInt(a.start, 10) - parseInt(b.start, 10),
+		)[0];
+		if (earliest) {
+			const start = this.formatTimeLabel(earliest.start);
+			return `Drop by when doors open around ${start} for a relaxed experience.`;
+		}
+
+		return null;
+	}
+
+	private buildDishRecommendations(restaurant: Restaurant): string[] | null {
+		const suggestions = new Set<string>();
+		const cuisineLookup: Record<string, string[]> = {
+			italian: ['Margherita pizza', 'House-made pasta'],
+			american: ['Seasonal burger', 'House-smoked specials'],
+			japanese: ['Signature sushi rolls', 'Comforting ramen bowl'],
+			mexican: ['Street-style tacos', 'Fresh guacamole'],
+			indian: ['Butter chicken', 'Vegetarian thali'],
+			chinese: ['Dim sum sampler', 'Szechuan stir-fry'],
+			french: ['Steak frites', 'House pastries'],
+			mediterranean: ['Meze platter', 'Grilled skewers'],
+			thai: ['Pad thai', 'Green curry'],
+			greek: ['Souvlaki plate', 'Spanakopita'],
+			korean: ['Korean fried chicken', 'Bibimbap bowl'],
+			vietnamese: ['Pho', 'Banh mi sandwich'],
+			seafood: ['Daily catch', 'Grilled seafood platter'],
+			bbq: ['Smoked brisket', 'House ribs'],
+		};
+
+		const cuisineSource = `${restaurant.cuisine || ''}`.toLowerCase();
+		const categoryTitles = (restaurant.categories || [])
+			.map((category) => (category?.title || '').toLowerCase())
+			.filter(Boolean);
+
+		const matchedCuisineKey = Object.keys(cuisineLookup).find((key) => {
+			return (
+				cuisineSource.includes(key) ||
+				categoryTitles.some((title) => title.includes(key))
+			);
+		});
+
+		if (matchedCuisineKey) {
+			cuisineLookup[matchedCuisineKey].forEach((dish) => suggestions.add(dish));
+		}
+
+		if (!suggestions.size) {
+			const primaryCategory = this.extractPrimaryCategory(restaurant);
+			if (primaryCategory) {
+				suggestions.add(`Chef's special ${primaryCategory.toLowerCase()}`);
+			}
+		}
+
+		if (!suggestions.size) {
+			suggestions.add("Ask the team for today's best seller");
+		}
+
+		return Array.from(suggestions).slice(0, 3);
+	}
+
+	private extractPrimaryCategory(restaurant: Restaurant): string | null {
+		const category = (restaurant.categories || []).find((item) => {
+			const title = item?.title || '';
+			return title && !/restaurant/i.test(title);
+		});
+
+		if (category?.title) {
+			return category.title;
+		}
+
+		if (restaurant.cuisine) {
+			const cuisine = restaurant.cuisine.split(',')[0]?.trim();
+			return cuisine || null;
+		}
+
+		return null;
+	}
+
+	private parseRating(rating?: number | string | null): number | null {
+		if (rating === null || rating === undefined) {
+			return null;
+		}
+		if (typeof rating === 'number') {
+			return Number.isFinite(rating) ? rating : null;
+		}
+		const parsed = parseFloat(String(rating));
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
+	private formatTimeLabel(raw?: string): string {
+		if (!raw) {
+			return '';
+		}
+		const padded = raw.padStart(4, '0');
+		const hours = parseInt(padded.slice(0, 2), 10);
+		const minutes = parseInt(padded.slice(2, 4), 10);
+		if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+			return '';
+		}
+		const period = hours >= 12 ? 'PM' : 'AM';
+		const normalizedHour = ((hours + 11) % 12) + 1;
+		const minuteText = minutes.toString().padStart(2, '0');
+		return `${normalizedHour}:${minuteText} ${period}`;
+	}
+
 	private async convertPlacesBusinessToRestaurant(
 		business: PlacesBusiness,
 	): Promise<Restaurant> {

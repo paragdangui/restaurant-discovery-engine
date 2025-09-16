@@ -101,6 +101,15 @@ export class RestaurantsController {
     return await this.restaurantsService.getReviewSummary(externalId);
   }
 
+  @Get(':id/insights')
+  @ApiOperation({ summary: 'Get synthesized insights for a restaurant' })
+  @ApiParam({ name: 'id', description: 'Restaurant ID', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Returns restaurant insights' })
+  @ApiResponse({ status: 404, description: 'Restaurant not found' })
+  async getRestaurantInsights(@Param('id', ParseIntPipe) id: number) {
+    return await this.restaurantsService.getRestaurantInsights(id);
+  }
+
   @Post(':externalId/analyze-menu')
   @ApiOperation({ summary: 'Analyze menu for dietary restrictions' })
   @ApiParam({ name: 'externalId', description: 'External business ID (OSM element id)' })
