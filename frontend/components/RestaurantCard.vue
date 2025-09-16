@@ -19,7 +19,7 @@
       <button
         v-if="photosToShow.length > 1"
         @click.stop="prevImage"
-        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-20"
         aria-label="Previous image"
       >
         ‹
@@ -27,20 +27,20 @@
       <button
         v-if="photosToShow.length > 1"
         @click.stop="nextImage"
-        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors z-20"
         aria-label="Next image"
       >
         ›
       </button>
 
       <!-- Photo counter -->
-      <div v-if="photosToShow.length > 1" class="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
+      <div v-if="photosToShow.length > 1" class="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded z-20">
         {{ currentImageIndex + 1 }} / {{ photosToShow.length }}
       </div>
       
       <!-- Overlay with quick actions -->
-      <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-end justify-end p-3">
-        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-end justify-end p-3 z-10 pointer-events-none">
+        <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-auto">
           <button
             @click.stop="toggleFavorite"
             :class="[
