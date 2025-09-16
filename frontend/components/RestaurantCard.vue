@@ -3,16 +3,39 @@
     <!-- Image Section -->
     <div :class="['relative overflow-hidden', compact ? 'aspect-[4/3]' : 'aspect-[16/9]']">
       <img
-        v-if="restaurant.photos && restaurant.photos.length > 0"
-        :src="restaurant.photos[0]"
+        v-if="photosToShow.length > 0"
+        :src="photosToShow[currentImageIndex]"
         :alt="restaurant.name"
         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
-      <div 
-        v-else 
+      <div
+        v-else
         class="w-full h-full bg-gradient-to-br from-surface-200 to-surface-300 flex items-center justify-center"
       >
         <BuildingStorefrontIcon class="w-16 h-16 text-surface-400" />
+      </div>
+
+      <!-- Simple carousel controls -->
+      <button
+        v-if="photosToShow.length > 1"
+        @click.stop="prevImage"
+        class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+        aria-label="Previous image"
+      >
+        ‹
+      </button>
+      <button
+        v-if="photosToShow.length > 1"
+        @click.stop="nextImage"
+        class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+        aria-label="Next image"
+      >
+        ›
+      </button>
+
+      <!-- Photo counter -->
+      <div v-if="photosToShow.length > 1" class="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded">
+        {{ currentImageIndex + 1 }} / {{ photosToShow.length }}
       </div>
       
       <!-- Overlay with quick actions -->
@@ -219,6 +242,7 @@ const emit = defineEmits(['edit', 'delete', 'view-details', 'add-to-list', 'togg
 // Reactive data
 const showMoreActions = ref(false);
 const isFavorite = ref(false);
+const currentImageIndex = ref(0);
 
 // Computed properties
 const isOpenNow = computed(() => {
@@ -233,6 +257,15 @@ const formattedHours = computed(() => {
   if (!todayHours.is_open_now) return 'Closed';
   // This would need proper formatting based on current day
   return 'Open';
+});
+
+// Ensure at least 5 images by appending deterministic placeholders
+const photosToShow = computed(() => {
+  const existing = Array.isArray(props.restaurant.photos) ? props.restaurant.photos.filter(Boolean) : [];
+  const needed = Math.max(0, 5 - existing.length);
+  const seedBase = encodeURIComponent(String(props.restaurant.id || props.restaurant.externalId || props.restaurant.name || 'restaurant'));
+  const placeholders = Array.from({ length: needed }, (_, i) => `https://picsum.photos/seed/${seedBase}-${i}/800/600`);
+  return [...existing, ...placeholders];
 });
 
 // Methods
@@ -284,6 +317,16 @@ const getDirections = () => {
     const url = `https://www.openstreetmap.org/directions?from=&to=${props.restaurant.latitude},${props.restaurant.longitude}`;
     window.open(url, '_blank');
   }
+};
+
+const nextImage = () => {
+  if (photosToShow.value.length === 0) return;
+  currentImageIndex.value = (currentImageIndex.value + 1) % photosToShow.value.length;
+};
+
+const prevImage = () => {
+  if (photosToShow.value.length === 0) return;
+  currentImageIndex.value = (currentImageIndex.value - 1 + photosToShow.value.length) % photosToShow.value.length;
 };
 
 // Close dropdown when clicking outside

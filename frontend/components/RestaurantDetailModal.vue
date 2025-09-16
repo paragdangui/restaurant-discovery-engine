@@ -78,7 +78,7 @@
           <!-- Content -->
           <div class="overflow-y-auto max-h-[calc(90vh-80px)]">
             <!-- Image Gallery -->
-            <div v-if="restaurant?.photos && restaurant.photos.length > 0" class="relative">
+            <div v-if="photosToShow.length > 0" class="relative">
               <div class="h-64 md:h-80 overflow-hidden">
                 <img
                   :src="currentPhoto"
@@ -88,10 +88,10 @@
               </div>
               
               <!-- Photo Navigation -->
-              <div v-if="restaurant.photos.length > 1" class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+              <div v-if="photosToShow.length > 1" class="absolute bottom-4 left-1/2 transform -translate-x-1/2">
                 <div class="flex space-x-2">
                   <button
-                    v-for="(photo, index) in restaurant.photos.slice(0, 5)"
+                    v-for="(photo, index) in photosToShow.slice(0, 5)"
                     :key="index"
                     @click="currentPhotoIndex = index"
                     :class="[
@@ -104,7 +104,7 @@
               
               <!-- Photo Counter -->
               <div class="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                {{ currentPhotoIndex + 1 }} / {{ restaurant.photos.length }}
+                {{ currentPhotoIndex + 1 }} / {{ photosToShow.length }}
               </div>
             </div>
             
@@ -380,9 +380,18 @@ const aiInsights = ref(null)
 const recentReviews = ref([])
 
 // Computed properties
+// Ensure at least 5 images by appending deterministic placeholders
+const photosToShow = computed(() => {
+  const existing = Array.isArray(props.restaurant?.photos) ? props.restaurant.photos.filter(Boolean) : []
+  const needed = Math.max(0, 5 - existing.length)
+  const seedBase = encodeURIComponent(String(props.restaurant?.id || props.restaurant?.externalId || props.restaurant?.name || 'restaurant'))
+  const placeholders = Array.from({ length: needed }, (_, i) => `https://picsum.photos/seed/${seedBase}-${i}/1200/800`)
+  return [...existing, ...placeholders]
+})
+
 const currentPhoto = computed(() => {
-  if (!props.restaurant?.photos || props.restaurant.photos.length === 0) return null
-  return props.restaurant.photos[currentPhotoIndex.value]
+  if (photosToShow.value.length === 0) return null
+  return photosToShow.value[currentPhotoIndex.value]
 })
 
 const isOpenNow = computed(() => {

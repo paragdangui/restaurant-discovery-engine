@@ -4,7 +4,7 @@
     <div class="w-full h-full" ref="mapContainer">
       <client-only>
         <l-map
-          ref="map"
+          ref="mapRef"
           :zoom="mapZoom"
           :center="mapCenter"
           @ready="onMapReady"
@@ -215,7 +215,10 @@ const emit = defineEmits([
 
 // Reactive data
 const mapContainer = ref(null);
-const map = ref(null);
+// Vue-Leaflet component ref (wrapper component)
+const mapRef = ref(null);
+// Actual Leaflet map instance
+const leafletMap = ref(null);
 const mapCenter = ref([40.7589, -73.9851]); // Default to NYC
 const mapZoom = ref(13);
 const userLocation = ref(null);
@@ -272,12 +275,12 @@ const formatPrice = (priceLevel) => {
 const onMapReady = (mapInstance) => {
   // Vue Leaflet may pass either the Leaflet map or a component wrapper
   const lmap = mapInstance && mapInstance.leafletObject ? mapInstance.leafletObject : mapInstance;
-  map.value = lmap;
+  leafletMap.value = lmap;
 
-  if (map.value && typeof map.value.on === 'function') {
-    map.value.on('moveend', () => {
-      if (!map.value || typeof map.value.getBounds !== 'function') return;
-      const bounds = map.value.getBounds();
+  if (leafletMap.value && typeof leafletMap.value.on === 'function') {
+    leafletMap.value.on('moveend', () => {
+      if (!leafletMap.value || typeof leafletMap.value.getBounds !== 'function') return;
+      const bounds = leafletMap.value.getBounds();
       emit('bounds-change', {
         north: bounds.getNorth(),
         south: bounds.getSouth(),
@@ -295,14 +298,16 @@ const onMapClick = () => {
 };
 
 const zoomIn = () => {
-  if (map.value && typeof map.value.zoomIn === 'function') {
-    map.value.zoomIn();
+  const m = leafletMap.value;
+  if (m && typeof m.zoomIn === 'function') {
+    m.zoomIn();
   }
 };
 
 const zoomOut = () => {
-  if (map.value && typeof map.value.zoomOut === 'function') {
-    map.value.zoomOut();
+  const m = leafletMap.value;
+  if (m && typeof m.zoomOut === 'function') {
+    m.zoomOut();
   }
 };
 
@@ -332,25 +337,28 @@ const getCurrentLocation = async () => {
 const centerOnUserLocation = async () => {
   if (userLocation.value) {
     mapCenter.value = userLocation.value;
-    if (map.value && typeof map.value.panTo === 'function') {
-      map.value.panTo(userLocation.value);
+    const m = leafletMap.value;
+    if (m && typeof m.panTo === 'function') {
+      m.panTo(userLocation.value);
     }
   } else {
     await getCurrentLocation();
     if (userLocation.value) {
       mapCenter.value = userLocation.value;
-      if (map.value && typeof map.value.panTo === 'function') {
-        map.value.panTo(userLocation.value);
+      const m2 = leafletMap.value;
+      if (m2 && typeof m2.panTo === 'function') {
+        m2.panTo(userLocation.value);
       }
     }
   }
 };
 
 const searchInArea = () => {
-  if (!map.value || !floatingSearchQuery.value.trim()) return;
+  const m = leafletMap.value;
+  if (!m || !floatingSearchQuery.value.trim()) return;
 
-  const center = map.value.getCenter();
-  const bounds = map.value.getBounds();
+  const center = m.getCenter();
+  const bounds = m.getBounds();
   const radius = center.distanceTo(bounds.getNorthEast());
 
   searchArea.value = {
@@ -380,8 +388,9 @@ watch(() => props.selectedRestaurantId, (newId) => {
       // Pan to restaurant
       const position = [restaurant.latitude, restaurant.longitude];
       mapCenter.value = position;
-      if (map.value && typeof map.value.panTo === 'function') {
-        map.value.panTo(position);
+      const m = leafletMap.value;
+      if (m && typeof m.panTo === 'function') {
+        m.panTo(position);
       }
     }
   } else {
@@ -391,7 +400,8 @@ watch(() => props.selectedRestaurantId, (newId) => {
 
 // Watch for restaurants changes and fit bounds
 watch(() => props.restaurants, (newRestaurants) => {
-  if (newRestaurants.length > 0 && map.value && typeof map.value.fitBounds === 'function') {
+  const m = leafletMap.value;
+  if (newRestaurants.length > 0 && m && typeof m.fitBounds === 'function') {
     // Ensure Leaflet is loaded on client before using it
     if (!Leaflet) return;
     const bounds = Leaflet.latLngBounds();
@@ -408,7 +418,7 @@ watch(() => props.restaurants, (newRestaurants) => {
 
     // Only fit bounds if we have multiple points
     if (visibleRestaurants.value.length > 1 || userLocation.value) {
-      map.value.fitBounds(bounds, { padding: [50, 50] });
+      m.fitBounds(bounds, { padding: [50, 50] });
     }
   }
 }, { immediate: true });
@@ -418,6 +428,11 @@ onMounted(async () => {
   if (!Leaflet) {
     const mod = await import('leaflet');
     Leaflet = mod.default || mod;
+  }
+
+  // Ensure we capture the Leaflet map instance even if onMapReady didn't fire
+  if (!leafletMap.value && mapRef.value && mapRef.value.leafletObject) {
+    leafletMap.value = mapRef.value.leafletObject;
   }
 
   // Initialize search area if radius is provided
