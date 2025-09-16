@@ -31,6 +31,7 @@
 				:restaurant="restaurant"
 				@edit="editRestaurant"
 				@delete="deleteRestaurant"
+				@view-details="viewRestaurantDetails"
 			/>
 		</div>
 
@@ -54,6 +55,18 @@
 			:restaurant="editingRestaurant"
 			@saved="onRestaurantSaved"
 		/>
+
+		<!-- Restaurant Detail Modal -->
+		<client-only>
+			<RestaurantDetailModal
+				v-if="showDetailModal"
+				:restaurant="selectedRestaurant"
+				:show="showDetailModal"
+				@close="closeDetailModal"
+				@edit="editRestaurant"
+				@delete="deleteRestaurant"
+			/>
+		</client-only>
 	</div>
 </template>
 
@@ -63,6 +76,8 @@
 
 	const showAddModal = ref(false);
 	const editingRestaurant = ref(null);
+	const showDetailModal = ref(false);
+	const selectedRestaurant = ref(null);
 
 	// Fetch restaurants
 	const {
@@ -94,6 +109,16 @@
 		showAddModal.value = false;
 		editingRestaurant.value = null;
 		refresh();
+	};
+
+	const viewRestaurantDetails = (restaurant) => {
+		selectedRestaurant.value = restaurant;
+		showDetailModal.value = true;
+	};
+
+	const closeDetailModal = () => {
+		showDetailModal.value = false;
+		selectedRestaurant.value = null;
 	};
 
 	useHead({
