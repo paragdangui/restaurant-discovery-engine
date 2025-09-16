@@ -1,7 +1,7 @@
 <template>
-  <div :class="['material-card group overflow-hidden hover:scale-[1.02] transition-all duration-300', compact ? '!p-4' : '']">
+  <div :class="['material-card group hover:scale-[1.02] transition-all duration-300 overflow-visible', compact ? '!p-4' : '']">
     <!-- Image Section -->
-    <div :class="['relative overflow-hidden', compact ? 'aspect-[4/3]' : 'aspect-[16/9]']">
+    <div :class="['relative overflow-hidden rounded-t-lg', compact ? 'aspect-[4/3]' : 'aspect-[16/9]']">
       <img
         v-if="photosToShow.length > 0"
         :src="photosToShow[currentImageIndex]"
@@ -160,46 +160,51 @@
         <!-- More actions dropdown -->
         <div class="relative">
           <button
-            @click="showMoreActions = !showMoreActions"
+            ref="moreActionsTrigger"
+            @click.stop="toggleMoreActions"
             class="p-2 text-surface-400 hover:text-surface-600 rounded-lg hover:bg-surface-100 transition-colors"
           >
             <EllipsisVerticalIcon class="w-5 h-5" />
           </button>
           
-          <div
-            v-if="showMoreActions"
-            class="absolute right-0 top-full mt-1 w-48 bg-white border border-surface-200 rounded-lg shadow-material-4 z-20"
-          >
-            <button
-              @click="$emit('edit', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
+          <Teleport to="body">
+            <div
+              v-if="showMoreActions"
+              ref="moreActionsMenu"
+              class="fixed w-48 bg-white border border-surface-200 rounded-lg shadow-material-4 z-[1000]"
+              :style="menuStyles"
             >
-              <PencilIcon class="w-4 h-4 mr-2" />
-              Edit
-            </button>
-            <button
-              @click="getDirections"
-              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
-            >
-              <MapIcon class="w-4 h-4 mr-2" />
-              Get Directions
-            </button>
-            <button
-              @click="$emit('add-to-list', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
-            >
-              <PlusIcon class="w-4 h-4 mr-2" />
-              Add to List
-            </button>
-            <hr class="my-1" />
-            <button
-              @click="$emit('delete', restaurant); showMoreActions = false"
-              class="w-full px-4 py-2 text-left text-sm text-error-600 hover:bg-error-50 flex items-center transition-colors"
-            >
-              <TrashIcon class="w-4 h-4 mr-2" />
-              Delete
-            </button>
-          </div>
+              <button
+                @click="$emit('edit', restaurant); showMoreActions = false"
+                class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
+              >
+                <PencilIcon class="w-4 h-4 mr-2" />
+                Edit
+              </button>
+              <button
+                @click="getDirections"
+                class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
+              >
+                <MapIcon class="w-4 h-4 mr-2" />
+                Get Directions
+              </button>
+              <button
+                @click="$emit('add-to-list', restaurant); showMoreActions = false"
+                class="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center transition-colors"
+              >
+                <PlusIcon class="w-4 h-4 mr-2" />
+                Add to List
+              </button>
+              <hr class="my-1" />
+              <button
+                @click="$emit('delete', restaurant); showMoreActions = false"
+                class="w-full px-4 py-2 text-left text-sm text-error-600 hover:bg-error-50 flex items-center transition-colors"
+              >
+                <TrashIcon class="w-4 h-4 mr-2" />
+                Delete
+              </button>
+            </div>
+          </Teleport>
         </div>
       </div>
     </div>
@@ -241,6 +246,9 @@ const emit = defineEmits(['edit', 'delete', 'view-details', 'add-to-list', 'togg
 
 // Reactive data
 const showMoreActions = ref(false);
+const moreActionsTrigger = ref(null);
+const moreActionsMenu = ref(null);
+const menuStyles = ref({ top: '0px', left: '0px' });
 const isFavorite = ref(false);
 const currentImageIndex = ref(0);
 
@@ -330,12 +338,70 @@ const prevImage = () => {
 };
 
 // Close dropdown when clicking outside
+const positionMenu = () => {
+  const trigger = moreActionsTrigger.value;
+  const menu = moreActionsMenu.value;
+  if (!trigger || !menu) return;
+  const rect = trigger.getBoundingClientRect();
+  const margin = 4; // matches mt-1
+  const menuWidth = menu.offsetWidth || 192;
+  const menuHeight = menu.offsetHeight || 200;
+  const viewportW = window.innerWidth;
+  const viewportH = window.innerHeight;
+
+  let left = rect.right - menuWidth; // right-align to trigger
+  left = Math.max(8, Math.min(left, viewportW - menuWidth - 8));
+
+  let top = rect.bottom + margin; // open downward by default
+  if (viewportH - rect.bottom < menuHeight + margin && rect.top > menuHeight + margin) {
+    top = rect.top - menuHeight - margin; // flip upward if needed
+  }
+
+  menuStyles.value = { top: `${top}px`, left: `${left}px` };
+};
+
+const toggleMoreActions = async () => {
+  showMoreActions.value = !showMoreActions.value;
+  if (showMoreActions.value) {
+    await nextTick();
+    positionMenu();
+  }
+};
+
+const handleGlobalClick = (e) => {
+  const menu = moreActionsMenu.value;
+  const trigger = moreActionsTrigger.value;
+  if (!menu || !trigger) {
+    showMoreActions.value = false;
+    return;
+  }
+  if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+    showMoreActions.value = false;
+  }
+};
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape') {
+    showMoreActions.value = false;
+  }
+};
+
+const handleReposition = () => {
+  if (showMoreActions.value) positionMenu();
+};
+
 onMounted(() => {
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.relative')) {
-      showMoreActions.value = false;
-    }
-  });
+  document.addEventListener('click', handleGlobalClick, true);
+  document.addEventListener('keydown', handleKeydown);
+  window.addEventListener('resize', handleReposition);
+  window.addEventListener('scroll', handleReposition, true);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleGlobalClick, true);
+  document.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('resize', handleReposition);
+  window.removeEventListener('scroll', handleReposition, true);
 });
 </script>
 
