@@ -321,10 +321,31 @@ const openWebsite = () => {
 };
 
 const getDirections = () => {
-  if (props.restaurant.latitude && props.restaurant.longitude) {
-    const url = `https://www.openstreetmap.org/directions?from=&to=${props.restaurant.latitude},${props.restaurant.longitude}`;
+  if (typeof window === 'undefined') return;
+
+  const rawLat = props.restaurant.latitude ?? props.restaurant.coordinates?.latitude;
+  const rawLng = props.restaurant.longitude ?? props.restaurant.coordinates?.longitude;
+  const latitude = typeof rawLat === 'string' ? parseFloat(rawLat) : rawLat;
+  const longitude = typeof rawLng === 'string' ? parseFloat(rawLng) : rawLng;
+
+  if (typeof latitude === 'number' && typeof longitude === 'number' && !Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+    const url = `https://www.openstreetmap.org/directions?from=&to=${latitude},${longitude}`;
+    window.open(url, '_blank');
+    showMoreActions.value = false;
+    return;
+  }
+
+  const address =
+    props.restaurant.address ||
+    props.restaurant.location?.display_address?.join(', ') ||
+    props.restaurant.location?.address1;
+
+  if (address) {
+    const url = `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
     window.open(url, '_blank');
   }
+
+  showMoreActions.value = false;
 };
 
 const nextImage = () => {
