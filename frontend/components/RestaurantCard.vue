@@ -7,6 +7,7 @@
         :src="photosToShow[currentImageIndex]"
         :alt="restaurant.name"
         class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        @error="handleImageError"
       />
       <div
         v-else
@@ -268,13 +269,18 @@ const formattedHours = computed(() => {
 });
 
 // Ensure at least 5 images by appending deterministic placeholders
+const placeholderSeed = computed(() => {
+  return encodeURIComponent(String(props.restaurant.id || props.restaurant.externalId || props.restaurant.name || 'restaurant'));
+});
+
 const photosToShow = computed(() => {
   const existing = Array.isArray(props.restaurant.photos) ? props.restaurant.photos.filter(Boolean) : [];
   const needed = Math.max(0, 5 - existing.length);
-  const seedBase = encodeURIComponent(String(props.restaurant.id || props.restaurant.externalId || props.restaurant.name || 'restaurant'));
-  const placeholders = Array.from({ length: needed }, (_, i) => `https://picsum.photos/seed/${seedBase}-${i}/800/600`);
+  const placeholders = Array.from({ length: needed }, (_, i) => `https://picsum.photos/seed/${placeholderSeed.value}-${i}/800/600`);
   return [...existing, ...placeholders];
 });
+
+const fallbackImage = computed(() => `https://picsum.photos/seed/${placeholderSeed.value}-fallback/800/600`);
 
 // Methods
 const formatCategories = (categories) => {
@@ -356,6 +362,15 @@ const nextImage = () => {
 const prevImage = () => {
   if (photosToShow.value.length === 0) return;
   currentImageIndex.value = (currentImageIndex.value - 1 + photosToShow.value.length) % photosToShow.value.length;
+};
+
+const handleImageError = (event) => {
+  if (!event?.target) return;
+  // Prevent infinite loop if placeholder also fails
+  if (event.target.dataset?.fallbackApplied) return;
+
+  event.target.dataset.fallbackApplied = 'true';
+  event.target.src = fallbackImage.value;
 };
 
 // Close dropdown when clicking outside

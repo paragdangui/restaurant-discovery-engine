@@ -1,47 +1,36 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Root: `docker-compose.yml`, `.env.example`, `scripts/init-mysql.sql`.
-- Backend (NestJS + TypeScript): `backend/src/**` with domain modules (e.g., `restaurants`, `places`, `ai`, `health`). Build output in `backend/dist`.
-- Frontend (Nuxt 4 + Tailwind + Pinia): `frontend/pages`, `components`, `stores`, `plugins`, `nuxt.config.ts`.
-- Env samples: `backend/.env.example`, `frontend/.env.example`.
+- Backend NestJS code lives in `backend/src/**` with domain-focused modules (restaurants, places, ai, health). Build output is emitted to `backend/dist`.
+- Frontend Nuxt 4 app sits under `frontend/` with pages, components, stores, and plugins following Nuxt defaults.
+- Shared configs sit at the repo root (`docker-compose.yml`, `.env.example`, `scripts/init-mysql.sql`). Keep DTOs in `backend/src/**/dto` and entities under `backend/src/**/entities`.
+- Sample environment files are in `backend/.env.example` and `frontend/.env.example`; copy them before local work.
 
 ## Build, Test, and Development Commands
-- Backend
-  - `cd backend && npm ci` — install deps.
-  - `npm run start:dev` — run API with live reload on `:3001`.
-  - `npm run build` / `npm run start:prod` — compile and run from `dist`.
-  - `npm run lint` / `npm run format` — ESLint and Prettier.
-  - `npm test` / `npm run test:cov` — Jest unit tests (add tests as needed).
-- Frontend
-  - `cd frontend && npm ci` — install deps.
-  - `npm run dev` — start Nuxt dev server on `:3000`.
-  - `npm run build` / `npm run preview` — production build and preview.
-- Docker (full stack)
-  - `docker compose up -d --build` — MySQL, Redis, backend, frontend.
+- `cd backend && npm ci` — install backend dependencies.
+- `npm run start:dev` (backend) — hot-reload API on port 3001.
+- `npm run build` / `npm run start:prod` (backend) — compile to `dist` and run the production server.
+- `npm run lint` / `npm run format` (backend) — run ESLint and Prettier.
+- `npm test` / `npm run test:cov` (backend) — execute Jest specs and coverage.
+- `cd frontend && npm ci` then `npm run dev` — start the Nuxt dev server on port 3000.
+- `docker compose up -d --build` — launch full stack (MySQL, Redis, backend, frontend).
 
 ## Coding Style & Naming Conventions
-- TypeScript everywhere (backend and Nuxt). Use 2‑space indentation.
-- Follow Prettier defaults; fix lint with `npm run lint` (backend).
-- Naming: modules/dirs kebab-case; classes PascalCase; files camelCase or kebab-case (`restaurant.service.ts`, `restaurant-card.vue`).
-- Keep DTOs in `backend/src/**/dto`, entities in `**/entities`.
+- TypeScript across backend and frontend; use 2-space indentation.
+- Prefer camelCase or kebab-case for filenames (`restaurant.service.ts`, `restaurant-card.vue`). Classes stay PascalCase.
+- Run Prettier via `npm run format`; address lint feedback before committing.
 
 ## Testing Guidelines
-- Backend: Jest with file pattern `**/*.spec.ts`. Place tests under `backend/test` or alongside sources.
-- Frontend: not configured; if added, prefer Vitest + Vue Test Utils.
-- Target meaningful coverage for services and controllers; run `npm run test:cov`.
+- Backend tests use Jest with `*.spec.ts`; place suites in `backend/test` or next to source.
+- Aim for meaningful coverage through `npm run test:cov`; add specs when touching services or controllers.
+- Frontend testing is not yet configured—coordinate before introducing frameworks.
 
 ## Commit & Pull Request Guidelines
-- Current history is informal; prefer clear, imperative messages, e.g. `backend: add restaurant search filters`.
-- PRs should include:
-  - Summary, scope (frontend/backend), and motivation.
-  - Linked issue(s) and checklists for env changes.
-  - Screenshots or GIFs for UI changes; sample requests for API changes.
+- Write imperative commit messages (e.g., `backend: add restaurant search filters`).
+- PRs should state scope (frontend/backend), motivation, linked issues, and include env-change checklists.
+- Provide screenshots or sample requests for UI or API changes, and note any manual test steps.
 
 ## Security & Configuration Tips
-- Copy envs from `*.env.example`; never commit secrets. Keys of note: DB, Redis, `OPENAI_API_KEY`, `JWT_SECRET`.
-- Local dev: set `API_BASE_URL` in `frontend/.env` to backend URL.
-- Health endpoint: backend exposes `/health` for readiness.
-
-## Agent-Specific Instructions
-- Respect this guide’s structure when editing. Prefer minimal, focused patches and keep changes within module boundaries. Update env samples and README when introducing new config.
+- Never commit secrets; load `.env` files from the provided samples.
+- Key variables: DB credentials, Redis URI, `OPENAI_API_KEY`, `JWT_SECRET`, and `API_BASE_URL` for the frontend.
+- Backend exposes `/health` for readiness checks—keep it green in deployments.

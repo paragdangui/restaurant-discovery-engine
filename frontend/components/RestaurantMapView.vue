@@ -91,6 +91,15 @@
       </client-only>
     </div>
 
+    <div
+      v-if="locationError"
+      class="absolute top-4 left-1/2 -translate-x-1/2 max-w-lg w-full px-4 z-[1000]"
+    >
+      <div class="bg-white/95 border border-warning-300 text-warning-800 text-sm rounded-lg shadow-md px-4 py-3">
+        {{ locationError }}
+      </div>
+    </div>
+
     <!-- Map Controls -->
     <div class="absolute top-4 right-4 flex flex-col space-y-2 z-[1000]">
       <!-- Zoom Controls -->
@@ -226,6 +235,7 @@ const locationLoading = ref(false);
 const searchArea = ref(null);
 const floatingSearchQuery = ref('');
 const selectedRestaurant = ref(null);
+const locationError = ref(null);
 
 // Configuration
 const circleOptions = {
@@ -290,7 +300,7 @@ const onMapReady = (mapInstance) => {
     });
   }
 
-  getCurrentLocation();
+  requestLocationIfPermitted();
 };
 
 const onMapClick = () => {
@@ -312,7 +322,10 @@ const zoomOut = () => {
 };
 
 const getCurrentLocation = async () => {
-  if (!navigator.geolocation) return;
+  if (typeof window === 'undefined' || !navigator.geolocation) {
+    locationError.value = 'Geolocation is not supported in this browser.';
+    return;
+  }
 
   locationLoading.value = true;
   try {
@@ -327,11 +340,44 @@ const getCurrentLocation = async () => {
     const { latitude, longitude } = position.coords;
     userLocation.value = [latitude, longitude];
     emit('location-change', { lat: latitude, lng: longitude });
+    locationError.value = null;
   } catch (error) {
-    console.error('Error getting location:', error);
+    if (error?.code === 1) {
+      locationError.value = 'Location permission denied. Use the map controls to explore manually.';
+    } else if (error?.code === 2) {
+      locationError.value = 'We could not determine your location. Try again later or move the map manually.';
+    } else if (error?.code === 3) {
+      locationError.value = 'Finding your location took too long. Move the map or search for an area.';
+    } else {
+    locationError.value = 'Location services are unavailable. Try using the map manually.';
+    }
+    console.warn('Geolocation unavailable:', error);
   } finally {
     locationLoading.value = false;
   }
+};
+
+const requestLocationIfPermitted = async () => {
+  if (typeof window === 'undefined' || !navigator.geolocation) return;
+
+  if (navigator.permissions?.query) {
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' });
+      if (status.state === 'granted') {
+        await getCurrentLocation();
+        return;
+      }
+      if (status.state === 'denied') {
+        locationError.value = 'Location access is blocked in your browser settings. Use the map controls to explore manually.';
+        return;
+      }
+      // Prompt state: wait for user interaction to avoid automatic browser errors
+      locationError.value = null;
+    } catch (error) {
+      console.warn('Unable to verify geolocation permissions:', error);
+    }
+  }
+  // Browsers without the Permissions API will wait for explicit user action
 };
 
 const centerOnUserLocation = async () => {
@@ -374,8 +420,48 @@ const searchInArea = () => {
 };
 
 const getDirections = (restaurant) => {
-  const url = `https://www.openstreetmap.org/directions?from=&to=${restaurant.latitude},${restaurant.longitude}`;
-  window.open(url, '_blank');
+  if (typeof window === 'undefined') return;
+
+  const rawLat = restaurant.latitude ?? restaurant.coordinates?.latitude;
+  const rawLng = restaurant.longitude ?? restaurant.coordinates?.longitude;
+  const latitude = typeof rawLat === 'string' ? parseFloat(rawLat) : rawLat;
+  const longitude = typeof rawLng === 'string' ? parseFloat(rawLng) : rawLng;
+
+  const address =
+    restaurant.address ||
+    restaurant.location?.display_address?.join(', ') ||
+    restaurant.location?.address1;
+
+  if (typeof latitude === 'number' && typeof longitude === 'number' && !Number.isNaN(latitude) && !Number.isNaN(longitude)) {
+    const fromLat = Array.isArray(userLocation.value) ? userLocation.value[0] : null;
+    const fromLng = Array.isArray(userLocation.value) ? userLocation.value[1] : null;
+    const hasOrigin =
+      typeof fromLat === 'number' &&
+      typeof fromLng === 'number' &&
+      !Number.isNaN(fromLat) &&
+      !Number.isNaN(fromLng);
+
+    if (hasOrigin) {
+      const url = `https://www.openstreetmap.org/directions?from=${fromLat},${fromLng}&to=${latitude},${longitude}`;
+      window.open(url, '_blank');
+      return;
+    }
+
+    if (address) {
+      const url = `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}#map=17/${latitude}/${longitude}`;
+      window.open(url, '_blank');
+      return;
+    }
+
+    const url = `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=17/${latitude}/${longitude}`;
+    window.open(url, '_blank');
+    return;
+  }
+
+  if (address) {
+    const url = `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
+    window.open(url, '_blank');
+  }
 };
 
 // Watch for selected restaurant changes from parent
