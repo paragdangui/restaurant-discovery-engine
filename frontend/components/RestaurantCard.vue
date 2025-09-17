@@ -2,13 +2,39 @@
   <div :class="['material-card group hover:scale-[1.02] transition-all duration-300 overflow-visible', compact ? '!p-4' : '']">
     <!-- Image Section -->
     <div :class="['relative overflow-hidden rounded-t-lg', compact ? 'aspect-[4/3]' : 'aspect-[16/9]']">
-      <img
-        v-if="photosToShow.length > 0"
-        :src="photosToShow[currentImageIndex]"
-        :alt="restaurant.name"
-        class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        @error="handleImageError"
-      />
+      <ClientOnly v-if="photosToShow.length > 0">
+        <Swiper
+          :key="restaurant.id || restaurant.externalId || restaurant.name"
+          :modules="swiperModules"
+          :loop="photosToShow.length > 1"
+          :navigation="false"
+          :pagination="false"
+          class="!h-full"
+          @swiper="onSwiperInit"
+          @slideChange="onSlideChange"
+        >
+          <SwiperSlide
+            v-for="(photo, index) in photosToShow"
+            :key="`photo-${index}`"
+            class="!h-full"
+          >
+            <img
+              :src="photo || fallbackImage"
+              :alt="restaurant.name"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              @error="handleImageError"
+            />
+          </SwiperSlide>
+        </Swiper>
+        <template #fallback>
+          <img
+            :src="photosToShow[currentImageIndex] || fallbackImage"
+            :alt="restaurant.name"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            @error="handleImageError"
+          />
+        </template>
+      </ClientOnly>
       <div
         v-else
         class="w-full h-full bg-gradient-to-br from-surface-200 to-surface-300 flex items-center justify-center"
@@ -227,6 +253,8 @@ import {
   PlusIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Navigation, Pagination } from 'swiper/modules';
 
 const props = defineProps({
   restaurant: {
@@ -245,13 +273,43 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete', 'view-details', 'add-to-list', 'toggle-favorite']);
 
+// Stores
+const favoriteStore = useFavoriteStore();
+
 // Reactive data
 const showMoreActions = ref(false);
 const moreActionsTrigger = ref(null);
 const moreActionsMenu = ref(null);
 const menuStyles = ref({ top: '0px', left: '0px' });
-const isFavorite = ref(false);
 const currentImageIndex = ref(0);
+const swiperModules = [Navigation, Pagination];
+const swiperInstance = ref(null);
+
+const onSwiperInit = (swiper) => {
+  swiperInstance.value = swiper;
+  const index = typeof swiper?.realIndex === 'number' ? swiper.realIndex : swiper?.activeIndex;
+  currentImageIndex.value = typeof index === 'number' ? index : 0;
+};
+
+const onSlideChange = (swiper) => {
+  const index = typeof swiper?.realIndex === 'number' ? swiper.realIndex : swiper?.activeIndex;
+  currentImageIndex.value = typeof index === 'number' ? index : 0;
+};
+
+const resetSwiperPosition = () => {
+  const instance = swiperInstance.value;
+  if (!instance) return;
+  if (typeof instance.slideToLoop === 'function') {
+    instance.slideToLoop(0, 0);
+    return;
+  }
+  if (typeof instance.slideTo === 'function') {
+    instance.slideTo(0, 0);
+  }
+};
+
+// Favorite state driven by store so it stays in sync across the app
+const isFavorite = computed(() => favoriteStore.isFavorite(props.restaurant.id));
 
 // Computed properties
 const isOpenNow = computed(() => {
@@ -282,6 +340,28 @@ const photosToShow = computed(() => {
 
 const fallbackImage = computed(() => `https://picsum.photos/seed/${placeholderSeed.value}-fallback/800/600`);
 
+watch(
+  () => [props.restaurant?.id, props.restaurant?.externalId, props.restaurant?.name],
+  () => {
+    currentImageIndex.value = 0;
+    resetSwiperPosition();
+  }
+);
+
+watch(
+  () => photosToShow.value.length,
+  (length) => {
+    if (length <= 0) {
+      currentImageIndex.value = 0;
+      return;
+    }
+    if (currentImageIndex.value >= length) {
+      currentImageIndex.value = 0;
+      resetSwiperPosition();
+    }
+  }
+);
+
 // Methods
 const formatCategories = (categories) => {
   return categories.map(cat => cat.title).slice(0, 2).join(', ');
@@ -296,9 +376,13 @@ const formatTransaction = (transaction) => {
   return transactionMap[transaction] || transaction;
 };
 
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value;
-  emit('toggle-favorite', props.restaurant, isFavorite.value);
+const toggleFavorite = async () => {
+  try {
+    await favoriteStore.toggleFavorite(props.restaurant);
+    emit('toggle-favorite', props.restaurant, favoriteStore.isFavorite(props.restaurant.id));
+  } catch (error) {
+    console.error('Toggle favorite error:', error);
+  }
 };
 
 const shareRestaurant = async () => {
@@ -355,11 +439,19 @@ const getDirections = () => {
 };
 
 const nextImage = () => {
+  if (swiperInstance.value) {
+    swiperInstance.value.slideNext();
+    return;
+  }
   if (photosToShow.value.length === 0) return;
   currentImageIndex.value = (currentImageIndex.value + 1) % photosToShow.value.length;
 };
 
 const prevImage = () => {
+  if (swiperInstance.value) {
+    swiperInstance.value.slidePrev();
+    return;
+  }
   if (photosToShow.value.length === 0) return;
   currentImageIndex.value = (currentImageIndex.value - 1 + photosToShow.value.length) % photosToShow.value.length;
 };

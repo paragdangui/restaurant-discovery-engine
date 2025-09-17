@@ -5,7 +5,12 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt'
   ],
-  css: ['@/assets/css/main.css'],
+  css: [
+    '@/assets/css/main.css',
+    'swiper/css',
+    'swiper/css/navigation',
+    'swiper/css/pagination'
+  ],
   // Expose a public API base for use in components/composables
   // Defaults to '/api' so local dev routes through the Vite proxy.
   runtimeConfig: {

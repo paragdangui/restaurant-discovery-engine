@@ -95,24 +95,51 @@
 					<div class="overflow-y-auto max-h-[calc(90vh-80px)]">
 						<!-- Image Gallery -->
 						<div v-if="photosToShow.length > 0" class="relative">
-							<div class="h-64 md:h-80 overflow-hidden">
-								<img
-									:src="currentPhoto"
-									:alt="restaurant.name"
-									class="w-full h-full object-cover"
-								/>
-							</div>
+							<ClientOnly>
+									<Swiper
+										:modules="swiperModules"
+										:loop="photosToShow.length > 1"
+										:navigation="false"
+										:pagination="false"
+										class="h-64 md:h-80"
+										@swiper="onSwiperInit"
+										@slideChange="onSlideChange"
+									>
+									<SwiperSlide
+										v-for="(photo, index) in photosToShow"
+										:key="`detail-photo-${index}`"
+										class="h-64 md:h-80"
+									>
+										<img
+											:src="photo || fallbackImage"
+											:alt="restaurant?.name || 'Restaurant photo'"
+											class="w-full h-full object-cover"
+											@error="handleImageError"
+										/>
+									</SwiperSlide>
+								</Swiper>
+								<template #fallback>
+									<div class="h-64 md:h-80 overflow-hidden">
+										<img
+											:src="currentPhoto || fallbackImage"
+											:alt="restaurant?.name || 'Restaurant photo'"
+											class="w-full h-full object-cover"
+											@error="handleImageError"
+										/>
+									</div>
+								</template>
+							</ClientOnly>
 
 							<!-- Photo Navigation -->
-							<div
-								v-if="photosToShow.length > 1"
-								class="absolute bottom-4 left-1/2 transform -translate-x-1/2"
+								<div
+									v-if="photosToShow.length > 1"
+									class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20"
 							>
 								<div class="flex space-x-2">
 									<button
 										v-for="(photo, index) in photosToShow.slice(0, 5)"
 										:key="index"
-										@click="currentPhotoIndex = index"
+										@click="goToSlide(index)"
 										:class="[
 											'w-3 h-3 rounded-full transition-colors',
 											currentPhotoIndex === index
@@ -129,6 +156,12 @@
 							>
 								{{ currentPhotoIndex + 1 }} / {{ photosToShow.length }}
 							</div>
+						</div>
+						<div
+							v-else
+							class="h-64 md:h-80 bg-gradient-to-br from-surface-200 to-surface-300 flex items-center justify-center"
+						>
+							<BuildingStorefrontIcon class="w-16 h-16 text-surface-400" />
 						</div>
 
 						<div class="p-6 space-y-6">
@@ -433,6 +466,7 @@
 
 <script setup>
 	import {
+		BuildingStorefrontIcon,
 		XMarkIcon,
 		StarIcon,
 		HeartIcon,
@@ -443,6 +477,8 @@
 		GlobeAltIcon,
 		SparklesIcon,
 	} from '@heroicons/vue/24/outline';
+	import { Swiper, SwiperSlide } from 'swiper/vue';
+	import { Navigation, Pagination } from 'swiper/modules';
 
 	const props = defineProps({
 		restaurant: {
@@ -471,15 +507,13 @@
 	const isFavorite = ref(false);
 	const aiInsights = ref(null);
 	const recentReviews = ref([]);
+	const swiperModules = [Navigation, Pagination];
+	const swiperInstance = ref(null);
 
 	// Computed properties
 	// Ensure at least 5 images by appending deterministic placeholders
-	const photosToShow = computed(() => {
-		const existing = Array.isArray(props.restaurant?.photos)
-			? props.restaurant.photos.filter(Boolean)
-			: [];
-		const needed = Math.max(0, 5 - existing.length);
-		const seedBase = encodeURIComponent(
+	const placeholderSeed = computed(() => {
+		return encodeURIComponent(
 			String(
 				props.restaurant?.id ||
 					props.restaurant?.externalId ||
@@ -487,17 +521,70 @@
 					'restaurant',
 			),
 		);
+	});
+
+	const photosToShow = computed(() => {
+		const existing = Array.isArray(props.restaurant?.photos)
+			? props.restaurant.photos.filter(Boolean)
+			: [];
+		const needed = Math.max(0, 5 - existing.length);
 		const placeholders = Array.from(
 			{ length: needed },
-			(_, i) => `https://picsum.photos/seed/${seedBase}-${i}/1200/800`,
+			(_, i) => `https://picsum.photos/seed/${placeholderSeed.value}-${i}/1200/800`,
 		);
 		return [...existing, ...placeholders];
 	});
 
+	const fallbackImage = computed(
+		() => `https://picsum.photos/seed/${placeholderSeed.value}-fallback/1200/800`,
+	);
+
 	const currentPhoto = computed(() => {
-		if (photosToShow.value.length === 0) return null;
-		return photosToShow.value[currentPhotoIndex.value];
+		if (photosToShow.value.length === 0) return fallbackImage.value;
+		return photosToShow.value[currentPhotoIndex.value] || fallbackImage.value;
 	});
+
+	const onSwiperInit = (swiper) => {
+		swiperInstance.value = swiper;
+		const index = typeof swiper?.realIndex === 'number' ? swiper.realIndex : swiper?.activeIndex;
+		currentPhotoIndex.value = typeof index === 'number' ? index : 0;
+	};
+
+	const onSlideChange = (swiper) => {
+		const index = typeof swiper?.realIndex === 'number' ? swiper.realIndex : swiper?.activeIndex;
+		currentPhotoIndex.value = typeof index === 'number' ? index : 0;
+	};
+
+	const resetSwiperPosition = () => {
+		const instance = swiperInstance.value;
+		if (!instance) return;
+		if (typeof instance.slideToLoop === 'function' && instance.params?.loop) {
+			instance.slideToLoop(0, 0);
+			return;
+		}
+		if (typeof instance.slideTo === 'function') {
+			instance.slideTo(0, 0);
+		}
+};
+
+	const goToSlide = (index) => {
+		if (index < 0 || index >= photosToShow.value.length) return;
+		if (swiperInstance.value) {
+			if (typeof swiperInstance.value.slideToLoop === 'function' && swiperInstance.value.params?.loop) {
+				swiperInstance.value.slideToLoop(index);
+			} else if (typeof swiperInstance.value.slideTo === 'function') {
+				swiperInstance.value.slideTo(index);
+			}
+		}
+		currentPhotoIndex.value = index;
+	};
+
+	const handleImageError = (event) => {
+		if (!event?.target) return;
+		if (event.target.dataset?.fallbackApplied) return;
+		event.target.dataset.fallbackApplied = 'true';
+		event.target.src = fallbackImage.value;
+	};
 
 	const isOpenNow = computed(() => {
 		if (!props.restaurant?.hours) return false;
@@ -631,12 +718,27 @@
 				currentPhotoIndex.value = 0;
 				showAllHours.value = false;
 				isFavorite.value = favoriteStore.isFavorite(newRestaurant.id);
+				resetSwiperPosition();
 
 				// Load additional data
 				await Promise.all([loadAIInsights(), loadRecentReviews()]);
 			}
 		},
 		{ immediate: true },
+	);
+
+	watch(
+		() => photosToShow.value.length,
+		(length) => {
+			if (length <= 0) {
+				currentPhotoIndex.value = 0;
+				return;
+			}
+			if (currentPhotoIndex.value >= length) {
+				currentPhotoIndex.value = 0;
+				resetSwiperPosition();
+			}
+		},
 	);
 
 	// Handle escape key removed for build compatibility

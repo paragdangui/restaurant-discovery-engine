@@ -131,7 +131,6 @@
                   @edit="editRestaurant"
                   @delete="deleteRestaurant"
                   @add-to-list="addToFavorites"
-                  @toggle-favorite="toggleFavorite"
                 />
               </div>
             </div>
@@ -152,7 +151,6 @@
                   @edit="editRestaurant"
                   @delete="deleteRestaurant"
                   @add-to-list="addToFavorites"
-                  @toggle-favorite="toggleFavorite"
                 />
               </div>
             </div>
@@ -466,14 +464,6 @@ const addToFavorites = async (restaurant) => {
     await favoriteStore.addFavorite(restaurant.id)
   } catch (error) {
     console.error('Add to favorites error:', error)
-  }
-}
-
-const toggleFavorite = async (restaurant, isFavorite) => {
-  try {
-    await favoriteStore.toggleFavorite(restaurant)
-  } catch (error) {
-    console.error('Toggle favorite error:', error)
   }
 }
 
