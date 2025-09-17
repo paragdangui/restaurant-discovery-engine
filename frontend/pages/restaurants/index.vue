@@ -1,7 +1,7 @@
 <template>
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 		<div class="flex justify-between items-center mb-8">
-			<h1 class="text-3xl font-bold text-text">Restaurants...</h1>
+			<h1 class="text-3xl font-bold text-text">Restaurants</h1>
 			<button
 				@click="showAddModal = true"
 				class="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors"
@@ -70,10 +70,9 @@
 	</div>
 </template>
 
-
 <script setup>
 	// Import ofetch's $fetch explicitly for reliability in client handlers
-	import { $fetch } from 'ofetch'
+	import { $fetch } from 'ofetch';
 	const config = useRuntimeConfig();
 
 	const showAddModal = ref(false);
