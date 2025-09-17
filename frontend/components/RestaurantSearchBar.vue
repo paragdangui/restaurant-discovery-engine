@@ -28,7 +28,19 @@
       
       <!-- Location Input -->
       <div class="relative ml-3 flex-shrink-0">
-        <MapPinIcon class="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-surface-400" />
+        <button
+          type="button"
+          @click="handleLocationIconClick"
+          :disabled="locationLoading"
+          class="absolute left-2 top-1/2 -translate-y-1/2 rounded p-1 text-surface-400 hover:text-primary-500 disabled:opacity-50"
+          aria-label="Use current location"
+        >
+          <span
+            v-if="locationLoading"
+            class="block h-4 w-4 rounded-full border-2 border-primary-500 border-t-transparent animate-spin"
+          ></span>
+          <MapPinIcon v-else class="h-5 w-5" />
+        </button>
         <input
           v-model="location"
           type="text"
@@ -36,17 +48,6 @@
           class="w-48 rounded-lg border border-surface-300 py-3 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
           @keyup.enter="performSearch"
         />
-        
-        <!-- Use Current Location Button -->
-        <button
-          @click="getCurrentLocation"
-          :disabled="locationLoading"
-          class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-surface-400 hover:text-primary-500 disabled:opacity-50"
-        >
-          <component :is="locationLoading ? 'div' : 'LocationSearchingIcon'" 
-            :class="locationLoading ? 'animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full' : 'h-4 w-4'" 
-          />
-        </button>
       </div>
       
       <!-- Filter Toggle Button -->
@@ -351,6 +352,11 @@ const selectRecentSearch = (recent) => {
 
 const removeRecentSearch = (index) => {
   recentSearches.value.splice(index, 1);
+};
+
+const handleLocationIconClick = () => {
+  if (locationLoading.value) return;
+  getCurrentLocation();
 };
 
 const getCurrentLocation = async () => {
